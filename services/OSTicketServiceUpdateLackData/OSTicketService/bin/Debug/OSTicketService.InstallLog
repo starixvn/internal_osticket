@@ -1,0 +1,52 @@
+﻿Installing assembly 'D:\gitscm\osticket\dataservice\OSTicketService\OSTicketService\bin\Debug\OSTicketService.exe'.
+Affected parameters are:
+   logtoconsole = 
+   logfile = D:\gitscm\osticket\dataservice\OSTicketService\OSTicketService\bin\Debug\OSTicketService.InstallLog
+   assemblypath = D:\gitscm\osticket\dataservice\OSTicketService\OSTicketService\bin\Debug\OSTicketService.exe
+Installing service OSTicket...
+Service OSTicket has been successfully installed.
+Creating EventLog source OSTicket in log Application...
+Committing assembly 'D:\gitscm\osticket\dataservice\OSTicketService\OSTicketService\bin\Debug\OSTicketService.exe'.
+Affected parameters are:
+   logtoconsole = 
+   logfile = D:\gitscm\osticket\dataservice\OSTicketService\OSTicketService\bin\Debug\OSTicketService.InstallLog
+   assemblypath = D:\gitscm\osticket\dataservice\OSTicketService\OSTicketService\bin\Debug\OSTicketService.exe
+Installing assembly 'D:\GitScm\osticket\dataservice\OSTicketServiceUpdateLackData\OSTicketService\bin\Debug\OSTicketService.exe'.
+Affected parameters are:
+   logtoconsole = 
+   logfile = D:\GitScm\osticket\dataservice\OSTicketServiceUpdateLackData\OSTicketService\bin\Debug\OSTicketService.InstallLog
+   assemblypath = D:\GitScm\osticket\dataservice\OSTicketServiceUpdateLackData\OSTicketService\bin\Debug\OSTicketService.exe
+Installing service OSTicket...
+Creating EventLog source OSTicket in log Application...
+Rolling back assembly 'D:\GitScm\osticket\dataservice\OSTicketServiceUpdateLackData\OSTicketService\bin\Debug\OSTicketService.exe'.
+Affected parameters are:
+   logtoconsole = 
+   logfile = D:\GitScm\osticket\dataservice\OSTicketServiceUpdateLackData\OSTicketService\bin\Debug\OSTicketService.InstallLog
+   assemblypath = D:\GitScm\osticket\dataservice\OSTicketServiceUpdateLackData\OSTicketService\bin\Debug\OSTicketService.exe
+Restoring event log to previous state for source OSTicket.
+Installing assembly 'D:\GitScm\osticket\dataservice\OSTicketServiceUpdateLackData\OSTicketService\bin\Debug\OSTicketService.exe'.
+Affected parameters are:
+   logtoconsole = 
+   logfile = D:\GitScm\osticket\dataservice\OSTicketServiceUpdateLackData\OSTicketService\bin\Debug\OSTicketService.InstallLog
+   assemblypath = D:\GitScm\osticket\dataservice\OSTicketServiceUpdateLackData\OSTicketService\bin\Debug\OSTicketService.exe
+Installing service OSTicket...
+Creating EventLog source OSTicket in log Application...
+Rolling back assembly 'D:\GitScm\osticket\dataservice\OSTicketServiceUpdateLackData\OSTicketService\bin\Debug\OSTicketService.exe'.
+Affected parameters are:
+   logtoconsole = 
+   logfile = D:\GitScm\osticket\dataservice\OSTicketServiceUpdateLackData\OSTicketService\bin\Debug\OSTicketService.InstallLog
+   assemblypath = D:\GitScm\osticket\dataservice\OSTicketServiceUpdateLackData\OSTicketService\bin\Debug\OSTicketService.exe
+Restoring event log to previous state for source OSTicket.
+Installing assembly 'D:\GitScm\osticket\dataservice\OSTicketServiceUpdateLackData\OSTicketService\bin\Debug\OSTicketService.exe'.
+Affected parameters are:
+   logtoconsole = 
+   logfile = D:\GitScm\osticket\dataservice\OSTicketServiceUpdateLackData\OSTicketService\bin\Debug\OSTicketService.InstallLog
+   assemblypath = D:\GitScm\osticket\dataservice\OSTicketServiceUpdateLackData\OSTicketService\bin\Debug\OSTicketService.exe
+Installing service OSTicket...
+Creating EventLog source OSTicket in log Application...
+Rolling back assembly 'D:\GitScm\osticket\dataservice\OSTicketServiceUpdateLackData\OSTicketService\bin\Debug\OSTicketService.exe'.
+Affected parameters are:
+   logtoconsole = 
+   logfile = D:\GitScm\osticket\dataservice\OSTicketServiceUpdateLackData\OSTicketService\bin\Debug\OSTicketService.InstallLog
+   assemblypath = D:\GitScm\osticket\dataservice\OSTicketServiceUpdateLackData\OSTicketService\bin\Debug\OSTicketService.exe
+Restoring event log to previous state for source OSTicket.

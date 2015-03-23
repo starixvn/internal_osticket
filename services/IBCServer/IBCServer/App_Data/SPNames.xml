@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Functions>
+    <Function Name="OsTicket">
+      <Setting Key="GetAllSports" SpName="Ost_Sport_GetAll" DbName="bodb02" />
+      <Setting Key="GetNewTeams" SpName="Ost_Team_GetNewerTeams" DbName="bodb02" />
+      <Setting Key="GetNewMatchs" SpName="Ost_Match_GetNewerMatches" DbName="bodb02" />
+      <Setting Key="GetNewLeagues" SpName="Ost_League_GetNewerLeagues" DbName="bodb02" />
+    </Function>
+</Functions>

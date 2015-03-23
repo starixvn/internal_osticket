@@ -1,0 +1,13 @@
+﻿Installing assembly 'D:\gitscm\osticket\dataservice\OSTicketService\OSTicketService\bin\Debug\OSTicketService.exe'.
+Affected parameters are:
+   logtoconsole = 
+   logfile = D:\gitscm\osticket\dataservice\OSTicketService\OSTicketService\bin\Debug\OSTicketService.InstallLog
+   assemblypath = D:\gitscm\osticket\dataservice\OSTicketService\OSTicketService\bin\Debug\OSTicketService.exe
+Installing service OSTicket...
+Service OSTicket has been successfully installed.
+Creating EventLog source OSTicket in log Application...
+Committing assembly 'D:\gitscm\osticket\dataservice\OSTicketService\OSTicketService\bin\Debug\OSTicketService.exe'.
+Affected parameters are:
+   logtoconsole = 
+   logfile = D:\gitscm\osticket\dataservice\OSTicketService\OSTicketService\bin\Debug\OSTicketService.InstallLog
+   assemblypath = D:\gitscm\osticket\dataservice\OSTicketService\OSTicketService\bin\Debug\OSTicketService.exe
