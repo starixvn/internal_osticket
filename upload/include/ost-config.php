@@ -32,7 +32,7 @@ if(OSTINSTALLED!=TRUE){
 define('SECRET_SALT','A6E924251D58B00');
 
 #Default admin email. Used only on db connection issues and related alerts.
-define('ADMIN_EMAIL','luckystar2203@gmail.com');
+define('ADMIN_EMAIL','edward.nguyen@nexcel.vn');
 
 #Mysql Login info
 define('DBTYPE','mysql');
