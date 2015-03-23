@@ -1,0 +1,541 @@
+/* SCP customizable stylesheet */
+
+
+/* input submit + button class  */
+.button {
+    font-family: Arial, Helvetica, sans-serif;
+    margin-left: 5px;
+    text-shadow: #56A2B1 -1px -1px 1px;
+    background-color: #74C0CF;
+    color: #FFF;
+    border: 1px solid #56A2B1;
+    padding : 2px;
+    cursor:pointer;
+    border-radius: 3px; 
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    
+}
+
+.button:hover {
+    background: #56A2B1;
+}
+
+
+/* mesages, warning and errors */
+
+.error, .msg {
+    font-family: Arial, Helvetica, sans-serif;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.error {
+    color: #FF0000;
+}
+.error_js {
+    font-family: Arial, Helvetica, sans-serif;   
+    font-weight: bold;
+    color: #FF0000;
+}
+
+.msg {
+    color:#006699;
+    font-size: 15px;
+    margin-bottom: 10px;
+    margin-left: 5px;
+}
+
+.announcement {
+    color: #FF0000;
+    margin: 5px;    
+}
+.announcement span {
+    color: #3E3E3E;
+    margin-left: 2px;
+    font-style: italic;
+}
+
+#infomessage, #warnmessage, #errormessage {
+    margin-bottom: 1.5em;
+    padding: 0.3em;
+    font-weight: bold;
+    border-top: 1px solid;
+    border-bottom: 1px solid;
+}
+
+
+#infomessage {
+  background-color: #390;
+  border-color: #390;
+  color: #390;
+  background: #CFC;
+}
+
+#errormessage {
+    border-color: #903;
+    background-color: #fcc;
+    color: #903;
+}
+
+#warnmessage {
+    border-color: #fad163;
+    background-color: #fdedc1;
+}
+
+
+/* Alt rows used on most data tables */
+.row1 td { background-color: #ECECEC;height: 27px; }
+.row2 td { background-color: #FFFFFF;height: 27px; }
+
+
+
+/* Data Table */
+table.dtable, table.logs {
+ border-left: 1px solid;
+ box-shadow:1px 1px 5px #888888;
+ border-collapse: collapse;
+}
+
+table.dtable td, table.logs td {
+  padding-left:5px;
+  border:1px solid;
+  border-top:none;
+  border-left:none; 
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
+table.dtable th, table.logs th {
+  color: #FFF;
+  font-size: 12px;
+  font-weight:bold;  
+}
+
+
+table.dtable, table.dtable td, table.dtable th, table.logs, table.logs td, table.logs th {
+  border-color:#CCC;
+}
+
+/* Table headings */
+table.dtable th, table.logs th {
+ /* text-align:left;*/
+  background:#ADADAD;
+  color:#FFF;
+  text-align: center;
+  height: 30px;
+  background: url(../images/table_header_repeat.jpg) repeat-x;   
+}
+
+table.dtable th a, table.dtable th a:hover {
+  color:#FFF;
+  text-decoration:underline;
+}
+
+/* row highlighting on hover + select */
+.dtable tr:hover td, .highlight td {  background-color: #FFFFDD; }
+/* disabled highlighting on nohover */
+.dtable tr:hover td.nohover, .highlight td.nohover {}
+
+
+
+
+/* Form Table */
+table.tform {
+ border-left: 1px solid;
+ border-top: 1px solid;
+ margin-bottom: 10px;
+}
+
+table.tform td,table.tform th {  
+  border:1px solid;
+  border-top:none;
+  border-left:none;
+  padding: 5px;
+}
+
+table.tform th {
+    text-align:left;
+    font-weight:normal;
+    background:#F4FAFF;
+    padding-left:5px;
+    width: 210px;
+}
+
+table.tform.tpl th {
+    width: 150px;
+}
+
+table.tform td {
+    background:#FFF;
+}
+
+table.tform, table.tform td, table.tform th {
+  border-color:#CCC;
+}
+
+table.tform tr.header td {
+    font-weight:bold;
+    background:#ADADAD; 
+    color:#FFF;
+    padding: 5px;
+}
+table.tform tr.subheader td {
+    font-weight:normal;
+    background:#DCDCDC;
+    padding: 5px;
+}
+table.tform input[type=text],input[type=password] {
+    width: 450px;
+    height: 25px;
+}
+
+table.tform textArea {
+    width: 450px;
+}
+table.tform select {   
+    height: 23px;
+    min-width: 50px;
+}
+
+table.front_layer td {
+    padding: 5px;
+}
+table.front_layer td * {
+    vertical-align: middle;
+}
+table.front_layer td label {
+    margin-left: 5px;
+}
+table.front_layer input[type=text],input[type=password] {
+    width: 450px;
+    height: 25px;
+    color: #3E3E3E;
+    font-weight: normal;
+    font-size: 9pt;
+    
+}
+table.front_layer textArea {
+    width: 450px;
+    color: #3E3E3E;
+    font-weight: normal;
+    font-size: 9pt;
+}
+table.front_layer select {   
+    height: 20px;
+    min-width: 50px;
+    color: #3E3E3E;
+    font-weight: normal;
+    font-size: 9pt;
+}
+#duedate {
+    width: 450px;
+    height: 25px;
+}
+
+.txt_keyword {    
+    height: 25px;
+    width: 200px;
+}
+.txt_date {
+    height: 25px;
+    width: 100px;
+}
+.select_search {
+    height: 25px;
+    width: 200px;
+}
+/* Ticket view related styles */
+
+
+/* Ticket view related styles */
+table.ticketinfo {
+    margin-bottom:5px;
+}
+
+table.ticketinfo td, table.ticketinfo th {
+    background-color: #F4FAFF;
+}
+
+table.ticketinfo th {
+    font-weight:bold;
+    text-align:left;
+    padding-left:3px;
+    width: 110px;
+}
+
+table.ticketoptions {
+    background-color: #EFEFEF;
+    border-color:#CCC;
+    border: 1px solid;
+}
+
+table.ticketoptions td {
+    border: 0;
+    padding-top:3px;
+}
+
+/* Ticket view (Notes, Messages and Responses) */
+#ticketthread table.message {
+    margin:10px 0 5px 0;
+}
+
+#ticketthread table.response {
+    margin-bottom:5px;
+}
+
+#ticketnotes table.note {
+    margin-bottom:10px;
+}
+
+table.message, table.response,table.note {
+    border: 1px solid;
+    border-bottom: none;
+    border-color:#ADADAD;
+}
+
+table.message td, table.message th,table.response td, table.response th,table.note td, table.note th {
+    border-bottom:1px solid;
+    padding:5px;
+}
+
+table.message td, table.response td, table.note td{
+  background-color: #FAFAFA;
+}
+
+table.message th, table.response th, table.note th {
+    line-height:24px;
+    font-size:12px;
+    font-weight:bold;
+    text-align: left;
+    padding:1px;
+    padding-left:5px;
+}
+
+table.message th {
+    background-color: #C3D9FF;
+}
+
+table.response th {
+    background-color: #FFE0B3;
+}
+
+table.note th {
+    background-color: #D5DFF3;
+    color: #3E3E3E;
+}
+
+table.message tr.header td, table.response tr.header td, table.note tr.header td{
+    background-color: #EFEFEF;
+    border-color:#ccc;
+    padding:1px;
+    padding-left:5px;
+    float: left;
+}
+
+
+/*add more league/match*/
+.txt_input_popup {   
+   width: 450px;
+   height: 25px;
+   margin-left: 10px;
+   padding: 2px;
+}
+
+.textarea_input_popup {   
+   width: 450px;
+   height: 60px;
+   margin-left: 10px;
+}
+
+.align_title {
+    text-align: center !important;
+}
+
+.div_select {    
+    padding-top: 10px;
+}
+
+.div_templates_showing {
+    margin: 15px 0px 5px 0px;
+}
+
+.tbl_list {
+    padding: 5px 0px;
+}
+#advance table td {
+    padding: 3px;
+}
+ul.list_attachment {
+    margin: 0px;
+    padding: 0px;
+}
+ul.list_attachment li {
+    background: url('../../images/icon_file.png');
+    background-repeat: no-repeat;
+    padding-left: 25px;
+    list-style: none;
+    height: 20px;
+}
+table.td_txt_left th{
+    text-align: left;
+    padding: 5px;
+}
+table.td_txt_left td{
+    padding: 5px;
+}
+
+table.td_txt_left td select{
+    width: 200px;
+    height: 25px;
+}
+table.td_txt_left td input{
+    width: 200px;
+    height: 25px;
+}
+.select_choose {
+    width: 200px;  
+    color: #3E3E3E;
+    font-weight: normal;
+}
+
+.layer_poup_display {
+    width: 100%;
+    height: 100%;
+    background: #3E3E3E;
+    opacity: 0.3;
+    z-index: 1220;
+    position: absolute;
+    display: none;
+}
+.phone1 {
+    height: 25px;
+    width: 200px !important;
+}
+.phone2 {
+    height: 25px;
+    width: 100px !important;
+}
+
+.disable_btn {
+    background:#FFF;
+    font-family: Arial, Helvetica, sans-serif;
+    margin-left: 5px;
+    text-shadow: none;    
+    color: #ddd;
+    border: 1px solid #ADADAD;
+    padding : 2px;
+    cursor:pointer;
+    border-radius: 3px; 
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    cursor: text;
+}
+.disable_btn:hover {
+    background:#FFF;
+    color: #ddd;
+}
+
+.filter_btn {
+    background: #74C0CF;
+    border: 1px solid #56A2B1;
+    color: #FFFFFF;
+    text-shadow: -1px -1px 1px #56A2B1;
+    cursor: pointer;
+}
+
+.short {
+    width: 105px;
+}
+
+.align_selectbox {
+    margin-top: 5px;
+}
+
+.txt_ip {
+    width: 200px;
+    height: 25px;
+}
+
+.sync_data {   
+   width: 190px;
+}
+
+.sync_data_select {    
+   color: #006699;
+  
+   background:#ECECEC;  
+   width: 455px;
+   border: 1px solid #fff;   
+   border-left: 5px solid #FFF;
+   text-align: left;
+}
+.select_sync {
+    width: 50px;
+}
+
+.select_sync select {
+    line-height: 20px;
+}
+.select_search_league {
+    height: 25px;
+    width: 400px;
+}
+
+/* Override Jquery UI */
+
+.ui-widget-overlay {
+    background: #efefef;
+}
+.ui-dialog .ui-dialog-content {
+    background: #fff;
+}
+
+.loading {
+    background: url('../images/loading.gif') no-repeat;
+    width: 30px;
+    height: 30px;
+    display: none;
+    float: left;
+}
+
+.chzn-container {
+    float: left;
+}
+
+.pull-left {
+    float: left;
+}
+
+/* SELECT */
+
+.select2-container {
+    float: left;
+}
+.select2-results .select2-result-label {
+    text-align: left;
+}
+.select2-results .select2-no-results,
+.select2-results .select2-searching,
+.select2-results .select2-selection-limit {
+    text-align: left;
+}
+
+/* css for timepicker */
+.ui-timepicker-div .ui-widget-header { margin-bottom: 8px; }
+.ui-timepicker-div dl { text-align: left; }
+.ui-timepicker-div dl dt { float: left; clear:left; padding: 0 0 0 5px; }
+.ui-timepicker-div dl dd { margin: 0 10px 10px 45%; }
+.ui-timepicker-div td { font-size: 90%; }
+.ui-tpicker-grid-label { background: none; border: none; margin: 0; padding: 0; }
+
+.ui-timepicker-rtl{ direction: rtl; }
+.ui-timepicker-rtl dl { text-align: right; padding: 0 5px 0 0; }
+.ui-timepicker-rtl dl dt{ float: right; clear: right; }
+.ui-timepicker-rtl dl dd { margin: 0 45% 10px 10px; }
+
+table.front_layer input[type="text"].date {
+   width: 145px;
+   background: url(../images/cal.png) no-repeat center right;
+   padding-right: 25px;
+}
