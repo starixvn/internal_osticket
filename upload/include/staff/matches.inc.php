@@ -22,6 +22,7 @@ if(isset($_REQUEST["select_league_id"]) || isset($_REQUEST["$select_sport_type"]
     
 }
 $qwhere .= " AND ma.status=1";
+
 ?>
 
 <div class="msg" style="margin-left: 3px;">Matches</div>
@@ -52,8 +53,8 @@ $qwhere .= " AND ma.status=1";
                     <select id="league" name="select_league_id" data-placeholder="Select League" class="league-select select_search_league" tabindex="2">
                         <option selected="" value="0">All</option>
                         <?php
-                        $query = "SELECT league_id,league_name FROM " . LEAGUE_TABLE . " WHERE status=1 AND sport_type='" . $select_sport_type . "' ORDER BY updated DESC, league_name ASC";                
-                        $result_league = db_query($query);
+                        $query = "SELECT league_id,league_name FROM " . LEAGUE_TABLE . " WHERE status=1 AND sport_type='" . $select_sport_type . "' ORDER BY updated DESC, league_name ASC";       
+						$result_league = db_query($query);
                          if($result_league && db_num_rows($result_league)) {            
                             while ($row_league = db_fetch_array($result_league)) {     
                         ?>
@@ -98,6 +99,7 @@ $qselect = "SELECT match_id,ma.status,ma.league_id,league_name,home_id".
                 END AS `away_team`";
 
 $qfrom = ' FROM ' .MATCH_TABLE. ' AS ma JOIN ' . LEAGUE_TABLE . ' AS lea ON ma.league_id=lea.league_id';
+
 //get log count based on the query so far..
 $total = db_count("SELECT count(*) $qfrom $qwhere");
 $pagelimit = PAGE_LIMIT;

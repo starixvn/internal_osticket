@@ -43,7 +43,7 @@ $(document).ready(function() {
     });
 
     $('#insert_ticket').click(function() {
-        intTotal = $('ul.qq-upload-list').find('li').size();        
+        intTotal = $('ul.qq-upload-list').find('li').size();       
         if(intTotal != 0) {
             var sport_type = $('#sport_chzn').find('a').find('span').html();
             var league_name = $('#league_chzn').find('a').find('span').html();
@@ -57,7 +57,7 @@ $(document).ready(function() {
                 $('#frm_ticket').submit();
             }            
         } else {
-            $('#frm_ticket').submit();
+            	$('#frm_ticket').submit();
         }
     });
 });

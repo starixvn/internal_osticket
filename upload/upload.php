@@ -1,6 +1,7 @@
 <?php
 
-$uploaddir = "D:\Web\RnD\OsTicket\Production\scp\uploads\\";
+//$uploaddir = "D:\Web\RnD\OsTicket\Production\scp\uploads\\";
+$uploaddir = "scp\uploads\\";
 $uploadfile = $uploaddir . basename($_FILES['userfile']['name']);
 
 echo "<p>";
@@ -10,7 +11,7 @@ if (move_uploaded_file($_FILES['userfile']['tmp_name'], $uploadfile)) {
 } else {
    echo "Upload failed";
 }
-
+exit;
 echo "</p>";
 echo '<pre>';
 echo 'Here is some more debugging info:';

@@ -41,8 +41,8 @@
     #Error reporting...Good idea to ENABLE error reporting to a file. i.e display_errors should be set to false
     error_reporting(E_ALL ^ E_NOTICE); //Respect whatever is set in php.ini (sysadmin knows better??)
     #Don't display errors
-    ini_set('display_errors',1);
-    ini_set('display_startup_errors',1);
+    ini_set('display_errors',0);
+    ini_set('display_startup_errors',0);
 
     //Start the session
     session_start();
@@ -150,7 +150,7 @@
     
     // define API for web service
     //define(URL_WEBSERVICE, 'http://10.19.10.71:8081/api/');
-    define(URL_WEBSERVICE, 'http://qa2.ibc88.com/osticket/api/');
+    define(URL_WEBSERVICE, 'http://58.86.55.10/osticket-sync-event/api/');
     // number of item in page
     define('PAGE_LIMIT','30');    
    

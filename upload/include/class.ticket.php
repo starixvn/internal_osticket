@@ -1395,7 +1395,6 @@ class Ticket {
                 foreach ($arrAttachment as $strAttachment) {
                     if ($strAttachment != '') {
                         if (in_array($strAttachment, $arrAttachmentByTicket) == false) {
-                            echo $strAttachment;
                             $aa++;
                             $arrValue = array('attachment_name' => $strAttachment,
                                 'ticket_id' => $this->getId());

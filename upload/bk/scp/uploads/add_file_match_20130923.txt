@@ -1,5 +1,0 @@
-// add `kickofftime` field for `ost_match` table
-ALTER TABLE `ost_match` ADD `kickofftime` DATETIME NULL AFTER `event_date` 
-
-// add `kickofftime` field for `ibc_match` table
-ALTER TABLE `ibc_match` ADD `kickofftime` DATETIME NULL AFTER `event_date` 

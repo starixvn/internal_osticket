@@ -1,0 +1,39 @@
+﻿@import "_variables.scss";
+
+// Ex: margin-right: pem(16);
+@function em($pxval, $base: $font-size) {
+    @return #{$pxval / $base}em;
+}
+
+/*
+@include property-em(line-height, 30, 16)
+@include property-em(padding, 0 25, 16);
+@include property-em(text-shadow, (#0d6e28 1 1) (#777 0 0 2), 16);
+@include property-em(box-shadow, (inset 0 0 0 1 #2a9022) (inset 0 0 3 #459966), 16);
+*/
+@mixin property-em($props, $sizes, $base: $font-size) {
+    $values: ();
+    $sublists: false;
+
+    @each $size in $sizes {
+        @if type-of($size) == list {
+            $sublists: true;
+            $emvalue: ();
+
+            @each $pxvalue in $size {
+                $emvalue: append($emvalue, if(type-of($pxvalue) == number, if($size == 0, 0, #{$size / $base}em), $pxvalue));
+            }
+
+            $values: append($values, join((), $emvalue));
+        }
+        @else {
+            $values: append($values, if(type-of($size) == number, if($size == 0, 0, #{$size / $base}em), $size));
+        }
+    }
+
+    $value: join((), $values, if($sublists, comma, space));
+
+    @each $prop in $props {
+        #{$prop}: $value;
+    }
+}

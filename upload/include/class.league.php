@@ -117,8 +117,8 @@ class League extends IBC_League {
         }elseif(strlen($vars['league_name']) < 4) {
             $errors['league_name'] = 'League name must be at least 4 chars.';
         }else{
-            $sql = "SELECT league_id FROM " . LEAGUE_TABLE . " WHERE status=1 AND league_name='" . db_input($vars['league_name']) . "' AND sport_type=" . db_input($vars['sport_type'])
-			. "' AND ibc_league_id=" . db_input($vars['ibc_league_id']);
+            $sql = "SELECT league_id FROM " . LEAGUE_TABLE . " WHERE status=1 AND league_name=" . db_input($vars['league_name']) . " AND sport_type=" . db_input($vars['sport_type'])
+			. " AND ibc_league_id=" . db_input($vars['ibc_league_id']);
             if($id) {
                 $sql .= ' AND league_id!=' . db_input($id);
             }

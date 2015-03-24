@@ -95,7 +95,8 @@ function getMatchListByLeagueId($intSportType = 0, $intLeagueId = 0, $strSD = ''
                 "FROM " . IBC_MATCH_TABLE ." AS `ma` " .
                 "WHERE  " . $strLeagueCond . "sport_type='" . $intSportType . "' " . $strWhere .
                 "ORDER BY kickofftime ASC";
-       //echo $query;exit;
+				
+        //echo $query;exit;
         $result_match = db_query($query);
         if($result_match && db_num_rows($result_match)) { 
             $arrMatch['total'] = db_num_rows($result_match);

@@ -681,7 +681,7 @@ if($_POST && $_REQUEST['t'] && !$errors):
                     $errors['err']='Internal error';
                 }
                 break;
-            case 'create':
+            case 'create':			
                 if(($leagueID=League::create($_POST,$errors)))
                     $msg=Format::htmlchars($_POST['league_name']).' added successfully';
                 elseif(!$errors['err'])
