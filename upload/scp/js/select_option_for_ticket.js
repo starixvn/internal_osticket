@@ -115,7 +115,7 @@ $(document).ready(function(){
                 var contact_info = $('#contact_info_trader').val();
                 $.ajax({
                     type:"GET",
-                    url: "../loadAjax.php",
+                    url: "loadAjax.php",
                     data: {
                         name:trader_name,
                         contact_info:contact_info,
@@ -174,7 +174,7 @@ $(document).ready(function(){
                 var contact_info = $('#contact_info_suspender').val();
                 $.ajax({
                     type:"GET",
-                    url: "../loadAjax.php",
+                    url: "loadAjax.php",
                     data: {
                         name:suspender_name,
                         contact_info:contact_info,
@@ -231,7 +231,7 @@ $(document).ready(function(){
                 var contact_info = $('#contact_info_csd').val();
                 $.ajax({
                     type:"GET",
-                    url: "../loadAjax.php",
+                    url: "loadAjax.php",
                     data: {
                         name:csd_name,
                         contact_info:contact_info,
@@ -288,7 +288,7 @@ $(document).ready(function(){
                 var contact_info = $('#contact_info_provider').val();
                 $.ajax({
                     type:"GET",
-                    url: "../loadAjax.php",
+                    url: "loadAjax.php",
                     data: {
                         name:provider_name,
                         contact_info:contact_info,
@@ -377,7 +377,7 @@ $(document).ready(function(){
             case '0':// typeAPI = 0 => all
                 $.ajax({
                     type: "GET",
-                    url: '../loadAjax.php',
+                    url: 'loadAjax.php',
                     data: {
                         typeAPI:typeAPI, 
                         type:'sync_data'
@@ -436,7 +436,7 @@ $(document).ready(function(){
             case '1':// typeAPI = 1 => sport
                 $.ajax({
                     type: "GET",
-                    url: '../loadAjax.php',
+                    url: 'loadAjax.php',
                     data: {
                         typeAPI:typeAPI, 
                         type:'sync_data'
@@ -463,7 +463,7 @@ $(document).ready(function(){
             case '2': // typeAPI = 2 => league
                 $.ajax({
                     type: "GET",
-                    url: '../loadAjax.php',
+                    url: 'loadAjax.php',
                     data: {
                         typeAPI:typeAPI, 
                         type:'sync_data'
@@ -486,7 +486,7 @@ $(document).ready(function(){
             case '3': // typeAPI = 3 => team
                 $.ajax({
                     type: "GET",
-                    url: '../loadAjax.php',
+                    url: 'loadAjax.php',
                     data: {
                         typeAPI:typeAPI, 
                         type:'sync_data'
@@ -509,7 +509,7 @@ $(document).ready(function(){
             case '4': // typeAPI = 4 => match
                 $.ajax({
                     type: "GET",
-                    url: '../loadAjax.php',
+                    url: 'loadAjax.php',
                     data: {
                         typeAPI:typeAPI, 
                         type:'sync_data'
@@ -563,7 +563,7 @@ function loadMoreLeagueList()
     $("#loading_league").show();
     $.ajax({
         type:"GET",
-        url: "../loadAjax.php",
+        url: "loadAjax.php",
         data: {
             sport_type: sport_type,
             is_ibc: true,
@@ -613,7 +613,7 @@ function loadMatchList() {
     $("#loading_match").show();
     $.ajax({
         type:"GET",
-        url: "../loadAjax.php",
+        url: "loadAjax.php",
         data: {
             league_id:league_id,
             sport_type:sport_type,
@@ -659,7 +659,7 @@ function searchLeagueWhenEdit(strPlaceHolder)
         minimumInputLength: 2,
         quietMillis: 100,
         ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
-            url: "../loadLeague.php",
+            url: "loadLeague.php",
             dataType: 'json',
             data: function (term, page) {
                 var sportType = $('#sport').val();
@@ -694,7 +694,7 @@ function searchLeague()
         minimumInputLength: 2,
         quietMillis: 100,
         ajax: { // instead of writing the function to execute the request we use Select2's convenient helper
-            url: "../loadLeague.php",
+            url: "loadLeague.php",
             dataType: 'json',
             data: function (term, page) {
                 var sportType = $('#sport').val();

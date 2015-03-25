@@ -221,7 +221,7 @@ $showing=db_num_rows($resp) ? $pageNav->showing() : "";
 
             $.ajax({
                 type:"GET",
-                url: "../loadAjax.php",
+                url: "loadAjax.php",
                 data: {
                     sport_type: sport_type,
                     is_ibc: 'false',

@@ -371,7 +371,7 @@ ul.list_attachment {
     padding: 0px;
 }
 ul.list_attachment li {
-    background: url('../../images/icon_file.png');
+    background: url('../images/icon_file.png');
     background-repeat: no-repeat;
     padding-left: 25px;
     list-style: none;

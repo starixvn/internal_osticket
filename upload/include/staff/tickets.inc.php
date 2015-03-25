@@ -742,7 +742,7 @@ $basic_display=!isset($_REQUEST['advance_search'])?true:false;
             var sport_type = $('#sport_type').val();
             $.ajax({
                 type:"GET",
-                url: "../loadAjax.php",
+                url: "loadAjax.php",
                 data: {sport_type:sport_type, type:'sport_league'},
                 dataType: "json",
                 success: function(data){
@@ -771,7 +771,7 @@ $basic_display=!isset($_REQUEST['advance_search'])?true:false;
             var sport_type = $('#sport_type').val();
             $.ajax({
                 type:"GET",
-                url: "../loadAjax.php",
+                url: "loadAjax.php",
                 data: {league_id:league_id, sport_type:sport_type, type:'change_league'},
                 dataType: "json",
                 success: function(data){

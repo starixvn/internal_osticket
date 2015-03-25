@@ -228,7 +228,7 @@ $info = ($errors && $_POST) ? Format::input($_POST) : Format::htmlchars($info);
            $("#away_id").append('<option value="">Select away team</option>');  
            $.ajax({
                 type:"GET",
-                url: "../loadAjax.php",
+                url: "loadAjax.php",
                 data: {sport_type:sport_type, type:'change_sport'},
                 dataType: "json",
                 success: function(data){console.log(data);                   
