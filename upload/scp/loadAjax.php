@@ -93,7 +93,7 @@ function getMatchListByLeagueId($intSportType = 0, $intLeagueId = 0, $strSD = ''
                     )
                     END AS `away_team`".
                 "FROM " . IBC_MATCH_TABLE ." AS `ma` " .
-                "WHERE  " . $strLeagueCond . "sport_type='" . $intSportType . "' " . $strWhere .
+                "WHERE  " . $strLeagueCond . "sport_type='" . $intSportType . "' AND `ma`.`home_id` > 0 AND `ma`.`away_id` > 0 " . $strWhere .
                 "ORDER BY kickofftime ASC";
 				
         //echo $query;exit;
