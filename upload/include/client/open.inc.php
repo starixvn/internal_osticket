@@ -45,7 +45,7 @@ $info=($_POST && $errors)?Format::input($_POST):array(); //on error...use the po
              &nbsp;Ext&nbsp;<input type="text" name="phone_ext" size="6" value="<?=$info['phone_ext']?>">
             &nbsp;<font class="error">&nbsp;<?=$errors['phone']?></font></td>
     </tr>
-    <tr height=2px><td align="left" colspan=2 >&nbsp;</td</tr>
+    <tr height=2px><td align="left" colspan=2 >&nbsp;</td></tr>
     <tr>
         <th>Help Topic:</th>
         <td>
@@ -98,12 +98,29 @@ $info=($_POST && $errors)?Format::input($_POST):array(); //on error...use the po
         <td>
             <select name="match">                
                 <?php
-                $query="SELECT match_id,match_name FROM " . MATCH_TABLE ." WHERE status=1 ORDER BY updated DESC, match_name ASC";                
+                //$query="SELECT match_id,match_name FROM " . MATCH_TABLE ." WHERE status=1 ORDER BY updated DESC, match_name ASC"; 
+				$query = "SELECT `match_id`, `match_code`, `event_date`, `kickofftime`" .
+                                ",CASE home_id
+                                WHEN 0
+                                THEN('')                
+                                ELSE(
+                                SELECT team_name FROM " . TEAM_TABLE . " AS `tea1` WHERE `ma`.`home_id`=`tea1`.`team_id`
+                                )
+                                END AS `home_team`".
+                                ",CASE away_id
+                                    WHEN 0
+                                    THEN('')                
+                                    ELSE(
+                                    SELECT team_name FROM " . TEAM_TABLE . " AS `tea2` WHERE `ma`.`away_id`=`tea2`.`team_id`
+                                    )
+                                    END AS `away_team`".
+                                " FROM " . MATCH_TABLE ." AS `ma` WHERE status=1 ORDER BY updated DESC";
                 $result_match = db_query($query);
                  if($result_match && db_num_rows($result_match)) {            
-                    while ($row_match = db_fetch_array($result_match)) {     
+                    while ($row_match = db_fetch_array($result_match)) {    
+					$match_name = $row_match['home_team'] . ' - vs - ' . $row_match['away_team'] . ' [' . $row_match['match_code'] . ']  ( ' . Format::db_date($row_match['event_date']) . ' )';
                 ?>
-                <option value="<?=$row_match['match_id']?>" <?php if($info['match'] == $row_match['match_id']) echo 'selected="selected"';?>><?=$row_match['match_name']?></option>
+                <option value="<?=$row_match['match_id']?>" <?php if($info['match'] == $row_match['match_id']) echo 'selected="selected"';?>><?=$match_name?></option>
                 <?php
                     }
                  }
@@ -221,7 +238,7 @@ $info=($_POST && $errors)?Format::input($_POST):array(); //on error...use the po
         </td>
     </tr>
     <?}?>
-    <tr height=2px><td align="left" colspan=2 >&nbsp;</td</tr>
+    <tr height=2px><td align="left" colspan=2 >&nbsp;</td></tr>
     <tr>
         <td></td>
         <td>
