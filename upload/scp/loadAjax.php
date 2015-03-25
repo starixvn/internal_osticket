@@ -435,7 +435,9 @@ function syncSportFromServer()
             $sport = (array)$sport;
             $intSportType = $sport['SportType'];
             $strSportName = $sport['SportName'];
-            if($intSportType > 0) {
+			$selectQuery = 'SELECT count(sport_type) AS number FROM ' . SPORT_TABLE . ' WHERE sport_type='. db_input($intSportType) . ' AND status=1';
+			$select_sport = db_fetch_array(db_query($selectQuery));
+            if($intSportType > 0 && $select_sport['number'] < 1) {
                 $sql_sport = "INSERT INTO " . SPORT_TABLE . 
                    " SET sport_type=" . db_input($intSportType) .
                         ",sport_name=" . db_input($strSportName) .
