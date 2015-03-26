@@ -28,9 +28,9 @@ namespace OSTicketService
         const string SQL_GET_MAX_TEAM_ID = "ost_getmaxteamid";
 
         private static readonly ILog LOG = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-        private static readonly string DEFAULT_IBCDB_SERVICE = ConfigurationSettings.AppSettings["IBCDBService"];
-        private static readonly string DEFAULT_CONNECTION_STRING = ConfigurationSettings.AppSettings["OSTicketConnectionString"];
-        
+        private static readonly string DEFAULT_IBCDB_SERVICE = ConfigurationManager.AppSettings["IBCDBService"];
+        private static readonly string DEFAULT_CONNECTION_STRING = ConfigurationManager.AppSettings["OSTicketConnectionString"];
+
 
         public string ConnectionString { get; private set; }
         public string IBCDBService { get; private set; }

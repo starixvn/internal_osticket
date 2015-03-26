@@ -9,7 +9,13 @@ namespace OSTicketService
         /// </summary>
         static void Main()
         {
-
+            log4net.Config.XmlConfigurator.Configure();
+            ServiceBase[] ServicesToRun;
+            ServicesToRun = new ServiceBase[] 
+            { 
+                new OSTicket()
+            };
+            ServiceBase.Run(ServicesToRun);
         }
     }
 }

@@ -32,8 +32,7 @@ namespace OSTicketService
         public int RefreshingInterval { get; private set; }
 
         private DateTime NextRefreshingTime;
-        private Timer myTimer = null;
-        private StreamWriter myLogWriter = null;
+        private Timer myTimer = null;        
 
         OSTicketDBHelper myOSTicketHelper;
 
@@ -68,7 +67,8 @@ namespace OSTicketService
             NextRefreshingTime = DateTime.Now;
 
             // refreshing for the first time
-            //checkForRefreshing(this, null);            
+            //checkForRefreshing(this, null);
+
             myTimer.Enabled = true;
         }
 
@@ -78,7 +78,7 @@ namespace OSTicketService
 
             LOG.Info("Service stopped at " + DateTime.Now.ToString());
             // Logger.Log.Info("Service stopped at " + DateTime.Now.ToString());
-            myLogWriter.Close();
+            //myLogWriter.Close();
         }
 
         private void checkForRefreshing(object sender, ElapsedEventArgs e)
