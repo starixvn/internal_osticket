@@ -504,7 +504,13 @@ if($_POST && $errors){
                    while (list($attachment_id, $attachment_name) = db_fetch_row($attachments)) {
                        $strAttachmentName = $strAttachmentName.$attachment_name .',';
                ?>
-                    <li class="file_<?php echo $attachment_id;?>"><?php echo $attachment_name;?> <a href="download_file.php?filename=<?php echo $attachment_name;?>" class="qq-file-cancel" >Download</a>|<a href="javascript:void(0)" class="qq-file-cancel" onclick="delete_file(<?php echo $attachment_id;?>,'<?php echo $attachment_name;?>')" style="margin-left: 5px">Remove</a></li><br>
+                    <li class="file_<?php echo $attachment_id;?>">
+                        <span class="icon-file"></span>
+                        <?php echo $attachment_name;?>
+                        <div class="list-link">
+                            <a href="download_file.php?filename=<?php echo $attachment_name;?>" class="link" >Download</a>|<a href="javascript:void(0)" class="link" onclick="delete_file(<?php echo $attachment_id;?>,'<?php echo $attachment_name;?>')" style="margin-left: 5px">Remove</a>
+                        </div>
+                    </li>
                <?php
                    }
                }

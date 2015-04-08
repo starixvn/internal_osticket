@@ -366,17 +366,68 @@ table.message tr.header td, table.response tr.header td, table.note tr.header td
 #advance table td {
     padding: 3px;
 }
+
+.lbl-attachment {
+	color: #fe5b00;
+}
+
 ul.list_attachment {
     margin: 0px;
     padding: 0px;
 }
 ul.list_attachment li {
-    background: url('../images/icon_file.png');
-    background-repeat: no-repeat;
-    padding-left: 25px;
     list-style: none;
     height: 20px;
+	margin: 10px 0;
+	color: #449e07;
+  	font-size: 12px;
 }
+
+ul.list_attachment.view-detail li {
+	display: inline-block;
+	margin-right: 12px;
+}
+
+ul.list_attachment.view-detail li .icon-file {
+	top: 3px;
+}
+
+ul.list_attachment li .icon-file {
+ 	background: url('../images/icon_file.png');
+	display: inline-block;
+	width: 12px;
+	height: 15px;
+	margin-right: 2px;
+	position: relative;
+	top: -1px;
+}
+
+ul.list_attachment li .list-link {
+	display: inline-block;
+	margin-left: 20px;
+}
+
+ul.list_attachment li .icon-download {
+ 	background: url('../images/download.png');
+	display: inline-block;
+	width: 11px;
+	height: 16px;
+	margin-right: 2px;
+}
+
+ul.list_attachment li .link.file {
+	color: #449e07;
+}
+
+ul.list_attachment li .link {
+	color: #006699;
+	margin-right: 5px;
+}
+
+ul.list_attachment li .link:hover {
+	color: #fe5b00;
+}
+
 table.td_txt_left th{
     text-align: left;
     padding: 5px;

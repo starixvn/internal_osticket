@@ -147,7 +147,7 @@ if($ticket->isOverdue())
             </tr>
             <?php
             }
-            ?>
+            ?>            
         </table>
      </td>
      <td width=50% valign="top">
@@ -174,6 +174,31 @@ if($ticket->isOverdue())
             </tr>
         </table>
      </td>
+    </tr>
+    <tr>
+    	<table align="center" class="ticketinfo" cellspacing="1" cellpadding="3" width="100%" border=0>
+        	<tr>
+            	<th class="lbl-attachment">Attachment(s):</th>
+                <td>
+                	<ul class="list_attachment view-detail">
+                    	<?php
+						   $attachments = db_query("SELECT attachment_id,attachment_name FROM ".ATTACHMENT_TABLE." WHERE ticket_id='" . $ticket->getId() ."' ORDER BY attachment_name");
+						   $strAttachmentName = '';
+						   if($attachments && db_num_rows($attachments)) { 
+							   while (list($attachment_id, $attachment_name) = db_fetch_row($attachments)) {
+								   $strAttachmentName = $strAttachmentName.$attachment_name .',';
+						   ?>
+								 <li class="file_<?php echo $attachment_id;?>">
+                                    <a href="download_file.php?filename=<?php echo $attachment_name;?>" class="link file" ><span class="icon-file"></span> <?php echo $attachment_name;?></a>
+                                </li>
+						   <?php
+							   }
+						   }
+						   ?>
+                    </ul>
+                </td>
+            </tr>
+        </table>
     </tr>
 </table>
 <div>
