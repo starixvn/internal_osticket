@@ -30,7 +30,7 @@
     #Disable url fopen && url include
     ini_set('allow_url_fopen', 0);
     ini_set('allow_url_include', 0);
-
+	
     #Disable session ids on url.
     ini_set('session.use_trans_sid', 0);
     #No cache
@@ -43,7 +43,11 @@
     #Don't display errors
     ini_set('display_errors',0);
     ini_set('display_startup_errors',0);
-
+	
+	//Change default value of post_max_size and upload_max_filesize
+	ini_set('post_max_size', '200M');
+	ini_set('upload_max_filesize', '200M');
+		
     //Start the session
     session_start();
 
