@@ -498,7 +498,7 @@ if($_POST && $errors){
             <td>
                 <ul class="list_attachment">
                <?php
-               $attachments = db_query("SELECT attachment_id,attachment_name FROM ".ATTACHMENT_TABLE." WHERE ticket_id='" . $ticket->getId() ."' ORDER BY attachment_name");
+               $attachments = db_query("SELECT attachment_id,attachment_name FROM ".ATTACHMENT_TABLE." WHERE ticket_id='" . $ticket->getId() ."' AND type=0 ORDER BY attachment_name");
                $strAttachmentName = '';
                if($attachments && db_num_rows($attachments)) { 
                    while (list($attachment_id, $attachment_name) = db_fetch_row($attachments)) {

@@ -12,8 +12,21 @@
      $uploadPath .= $_SERVER["SERVER_NAME"].$projectName;
     }
    
-   // The file path where the file exists
-   $filepath = $uploadPath ."/uploads/".$_GET['filename']."";
+   $filename = $_GET['filename'];
+   $type = $_GET['type'];
+   switch ($type) {
+	case 'note':
+		// The file path where the file exists
+		$filepath = $uploadPath ."/uploads/note/".$filename."";
+		break;
+	case 'reply':
+		// The file path where the file exists
+		$filepath = $uploadPath ."/uploads/reply/".$filename."";
+		break;
+	default:
+		// The file path where the file exists
+		$filepath = $uploadPath ."/uploads/".$filename."";
+   }
    header("Pragma: public");
    header("Expires: 0");
    header("Cache-Control: must-revalidate, post-check=0, pre-check=0");

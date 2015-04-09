@@ -74,16 +74,6 @@ if($_POST && !$errors):
             if($lock && $lock->getStaffId()!=$thisuser->getId())
                 $errors['err']='Action Denied. Ticket is locked by someone else!';
 
-            //Check attachments restrictions.
-            if($_FILES['attachment'] && $_FILES['attachment']['size']) {
-                if(!$_FILES['attachment']['name'] || !$_FILES['attachment']['tmp_name'])
-                    $errors['attachment']='Invalid attachment';
-                elseif(!$cfg->canUploadFiles()) //TODO: saved vs emailed attachments...admin config??
-                    $errors['attachment']='upload dir invalid. Contact admin.';
-                elseif(!$cfg->canUploadFileType($_FILES['attachment']['name']))
-                    $errors['attachment']='Invalid file type';
-            }
-
             //Make sure the email is not banned
             if(!$errors && BanList::isbanned($ticket->getEmail()))
                 $errors['err']='Email is in banlist. Must be removed to reply';
@@ -91,6 +81,18 @@ if($_POST && !$errors):
             //If no error...do the do.
             if(!$errors && ($respId=$ticket->postResponse($_POST['msg_id'],$_POST['response'],$_POST['signature'],$_FILES['attachment']))){
                 $msg='Response Posted Successfully';
+				
+				// insert attachment
+				$objAttachment = new Attachment();
+				$arrAttachment = explode(',', $_POST['attachment_name']);
+				foreach ($arrAttachment as $strAttachment) {
+					if ($strAttachment != '') {
+						$arrValue = array('attachment_name' => $strAttachment,
+							'ticket_id' => $id, 'type' => '1', 'response_id' => $respId, 'note_id' => 0);
+						$objAttachment->create($arrValue, $errors);
+					}
+				}
+				
                 //Set status if any.
                 $wasOpen=$ticket->isOpen();
                 if(isset($_POST['ticket_status']) && $_POST['ticket_status']) {
@@ -104,6 +106,7 @@ if($_POST && !$errors):
                     $ticket->uploadAttachment($_FILES['attachment'],$respId,'R');
                 }
                 $ticket->reload();
+				
                 //Mark the ticket answered if OPEN.
                 if($ticket->isopen()){
                     $ticket->markAnswered();
@@ -185,8 +188,20 @@ if($_POST && !$errors):
             if(!$params->validate($_POST))
                 $errors=array_merge($errors,$params->errors());
 
-            if(!$errors && $ticket->postNote($_POST['title'],$_POST['note'])){
+            if(!$errors && ($noteId=$ticket->postNote($_POST['title'],$_POST['note']))){
                 $msg='Internal note posted';
+				
+				// insert attachment
+				$objAttachment = new Attachment();
+				$arrAttachment = explode(',', $_POST['attachment_name']);
+				foreach ($arrAttachment as $strAttachment) {
+					if ($strAttachment != '') {
+						$arrValue = array('attachment_name' => $strAttachment,
+							'ticket_id' => $id, 'type' => '2', 'response_id' => 0, 'note_id' => $noteId);
+						$objAttachment->create($arrValue, $errors);
+					}
+				}
+				
                 if(isset($_POST['ticket_status']) && $_POST['ticket_status']){
                     if($ticket->setStatus($_POST['ticket_status']) && $ticket->reload()){
                         $msg.=' and status set to '.($ticket->isClosed()?'closed':'open');

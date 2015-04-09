@@ -493,7 +493,7 @@ if ($services && db_num_rows($services)) {
             <ul id="manualUploadModeExample" class="unstyled"></ul>                
         </td>
     </tr>
-    <tr height=2px><td align="left" colspan=2 >&nbsp;</td</tr>
+    <tr height=2px><td align="left" colspan=2 >&nbsp;</td></tr>
     <tr>
         <td></td>
         <td>

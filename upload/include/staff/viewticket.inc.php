@@ -1,3 +1,15 @@
+<!-- attachment -->
+<link href="css/fineuploader.css" rel="stylesheet">
+<script src="js/header.js"></script>
+<script src="js/util.js"></script>
+<script src="js/button.js"></script>
+<script src="js/handler.base.js"></script>
+<script src="js/handler.form.js"></script>
+<script src="js/handler.xhr.js"></script>
+<script src="js/uploader.basic.js"></script>
+<script src="js/dnd.js"></script>
+<script src="js/uploader.js"></script>
+<script type="text/javascript" src="js/jquery.validate.js" charset="utf-8"></script>
 <?php
 //Note that ticket is initiated in tickets.php.
 if(!defined('OSTSCPINC') || !@$thisuser->isStaff() || !is_object($ticket) ) die('Invalid path');
@@ -182,7 +194,7 @@ if($ticket->isOverdue())
                 <td>
                 	<ul class="list_attachment view-detail">
                     	<?php
-						   $attachments = db_query("SELECT attachment_id,attachment_name FROM ".ATTACHMENT_TABLE." WHERE ticket_id='" . $ticket->getId() ."' ORDER BY attachment_name");
+						   $attachments = db_query("SELECT attachment_id,attachment_name FROM ".ATTACHMENT_TABLE." WHERE ticket_id='" . $id ."' AND type=0 ORDER BY attachment_name");
 						   $strAttachmentName = '';
 						   if($attachments && db_num_rows($attachments)) { 
 							   while (list($attachment_id, $attachment_name) = db_fetch_row($attachments)) {
@@ -286,6 +298,26 @@ if(($resp=db_query($sql)) && ($notes=db_num_rows($resp))){
             <tr class="header"><td><?=Format::display($row['title'])?></td></tr>
             <?} ?>
             <tr><td><?=Format::display($row['note'])?></td></tr>
+            <tr>
+                <td>
+                    <ul class="list_attachment view-detail">
+                        <?php
+                           $attachments = db_query("SELECT attachment_id,attachment_name FROM ".ATTACHMENT_TABLE." WHERE ticket_id='" . $id ."' AND type=2 AND note_id='" . $row['note_id'] . "' ORDER BY attachment_name");
+						  $strAttachmentName = '';
+                           if($attachments && db_num_rows($attachments)) { 
+                               while (list($attachment_id, $attachment_name) = db_fetch_row($attachments)) {
+                                   $strAttachmentName = $strAttachmentName.$attachment_name .',';
+                           ?>
+                                 <li class="file_<?php echo $attachment_id;?>">
+                                    <a href="download_file.php?filename=<?php echo $attachment_name;?>&type=note" class="link file" ><span class="icon-file"></span> <?php echo $attachment_name;?></a>
+                                </li>
+                           <?php
+                               }
+                           }
+                           ?>
+                    </ul>
+                </td>
+            </tr>
         </table>
      <?} ?>
    </div>
@@ -327,6 +359,27 @@ if(($resp=db_query($sql)) && ($notes=db_num_rows($resp))){
                         <td><?=$ticket->getAttachmentStr($respID,'R')?></td></tr>
                     <?}?>
 			        <tr><td> <?=Format::display($resp_row['response'])?></td></tr>
+                    <tr>
+                    	<td>
+                        	<ul class="list_attachment view-detail">
+								<?php
+                                   $attachments = db_query("SELECT attachment_id,attachment_name FROM ".ATTACHMENT_TABLE." WHERE ticket_id='" . $id ."' AND type=1 AND response_id='" . $respID . "' ORDER BY attachment_name");
+								  
+                                   $strAttachmentName = '';
+                                   if($attachments && db_num_rows($attachments)) { 
+                                       while (list($attachment_id, $attachment_name) = db_fetch_row($attachments)) {
+                                           $strAttachmentName = $strAttachmentName.$attachment_name .',';
+                                   ?>
+                                         <li class="file_<?php echo $attachment_id;?>">
+                                            <a href="download_file.php?filename=<?php echo $attachment_name;?>&type=reply" class="link file" ><span class="icon-file"></span> <?php echo $attachment_name;?></a>
+                                        </li>
+                                   <?php
+                                       }
+                                   }
+                                   ?>
+                            </ul>
+                        </td>
+                    </tr>
 		        </table>
 	        <?}
             $msgid =$msg_row['msg_id'];
@@ -369,7 +422,7 @@ if(($resp=db_query($sql)) && ($notes=db_num_rows($resp))){
                                 <?}?>
                                </select>&nbsp;&nbsp;&nbsp;<label><input type='checkbox' value='1' name=append checked="true" />Append</label>
                             <?}?>
-                            <textarea name="response" id="response" cols="90" rows="9" wrap="soft" style="width:90%"><?=$info['response']?></textarea>
+                            <textarea name="response" id="response" cols="90" rows="9" wrap="soft" style="width:90%; margin-top: 12px"><?=$info['response']?></textarea>
                         </div>
                         <?php if($cfg->canUploadFiles()){ //TODO: may be allow anyways and simply email out attachment?? ?>
                         <div style="margin-top: 3px;">
@@ -394,7 +447,7 @@ if(($resp=db_query($sql)) && ($notes=db_num_rows($resp))){
                                 <?}?>
                            </div>
                          <?}?>
-                        <div style="margin-top: 3px;">
+                        <div style="margin-top: 12px;">
                             <b>Ticket Status:</b>
                             <?
                             $checked=isset($info['ticket_status'])?'checked':''; //Staff must explicitly check the box to change status..
@@ -404,20 +457,25 @@ if(($resp=db_query($sql)) && ($notes=db_num_rows($resp))){
                             <label><input type="checkbox" name="ticket_status" id="l_ticket_status" value="Reopen" <?=$checked?> > Reopen on Reply</label>
                             <?}?>
                         </div>
-                        <p>
-                            <div  style="margin-left: 50px; margin-top: 30px; margin-bottom: 10px;border: 0px;">
-                                <input class="button" type='submit' value='Post Reply' />
-                                <input class="button" type='reset' value='Reset' />
-                                <input class="button" type='button' value='Cancel' onClick="history.go(-1)" />
-                            </div>
-                        </p>
+                        <div style="margin-top: 12px; display: table">
+                        	<div style="float: left"><b>Attachment(s):</b></div>
+                            <div style="float: left;margin-top: -4px;">
+                            	<ul id="manualUploadReply" class="unstyled manualUploadModeExample"></ul>
+                                <input type="hidden" value="" id="attachment_name_reply" name="attachment_name"/>  
+                            </div>                            
+                        </div>                        
+                        <div  style="margin-left: 50px; margin-top: 12px; margin-bottom: 10px;border: 0px;text-align: center;">
+                            <input class="button" type='button' value='Post Reply' id="insert-reply" />
+                            <input class="button" type='reset' value='Reset' />
+                            <input class="button" type='button' value='Cancel' onClick="history.go(-1)" />
+                        </div>                       
                     </form>                
                 </p>
             </div>
             <div id="notes" class="tabbertab"  align="left">
                 <h2>Post Internal Note</h2>
                 <p>
-                    <form action="tickets.php?id=<?=$id?>#notes" name="notes" class="inline" method="post" enctype="multipart/form-data">
+                    <form action="tickets.php?id=<?=$id?>#notes" name="notes" class="inline" method="post" enctype="multipart/form-data" id="frm-note">
                         <input type="hidden" name="ticket_id" value="<?=$id?>">
                         <input type="hidden" name="a" value="postnote">
                         <div>
@@ -425,17 +483,17 @@ if(($resp=db_query($sql)) && ($notes=db_num_rows($resp))){
                             <input type="text" name="title" id="title" value="<?=$info['title']?>" size=30px />
                             </select><font class="error">*&nbsp;<?=$errors['title']?></font>
                         </div>
-                        <div style="margin-top: 3px;">
+                        <div style="margin-top: 12px;">
                             <label for="note" valign="top">Enter note content.
                                 <font class="error">*&nbsp;<?=$errors['note']?></font></label><br/>
-                            <textarea name="note" id="note" cols="80" rows="7" wrap="soft" style="width:90%"><?=$info['note']?></textarea>
+                            <textarea name="note" id="note" cols="80" rows="7" wrap="soft" style="width:90%; margin-top: 12px;"><?=$info['note']?></textarea>
                         </div>
 
                         <?
                          //When the ticket is assigned Allow assignee, admin or ANY dept manager to close it
                         if(!$ticket->isAssigned() || $thisuser->isadmin()  || $thisuser->isManager() || $thisuser->getId()==$ticket->getStaffId()) {
                          ?>
-                        <div style="margin-top: 3px;">
+                        <div style="margin-top: 12px;">
                             <b>Ticket Status:</b>
                             <?
                             $checked=($info && isset($info['ticket_status']))?'checked':''; //not selected by default.
@@ -446,13 +504,18 @@ if(($resp=db_query($sql)) && ($notes=db_num_rows($resp))){
                             <?}?>
                         </div>
                         <?}?>
-                        <p>
-                            <div  align="left" style="margin-left: 50px;margin-top: 10px; margin-bottom: 10px;border: 0px;">
-                                <input class="button" type='submit' value='Submit' />
-                                <input class="button" type='reset' value='Reset' />
-                                <input class="button" type='button' value='Cancel' onClick="history.go(-1)" />
-                            </div>
-                        </p>
+                        <div style="margin-top: 12px; display: table">
+                        	<div style="float: left"><b>Attachment(s):</b></div>
+                            <div style="float: left;margin-top: -4px;">
+                            	<ul id="manualUploadNote" class="unstyled manualUploadModeExample"></ul>
+                                <input type="hidden" value="" id="attachment_name_note" name="attachment_name"/>   
+                            </div>                            
+                        </div>  
+                        <div  align="left" style="margin-left: 50px;margin-top: 12px; margin-bottom: 10px;border: 0px;text-align: center;">
+                            <input class="button" type='button' value='Submit' id="insert-note" />
+                            <input class="button" type='reset' value='Reset' />
+                            <input class="button" type='button' value='Cancel' onClick="history.go(-1)" />
+                        </div>
                     </form>
                 </p>
             </div>
@@ -479,13 +542,13 @@ if(($resp=db_query($sql)) && ($notes=db_num_rows($resp))){
                                 }?>
                             </select><font class='error'>&nbsp;*<?=$errors['dept_id']?></font>
                         </div>
-                        <div>
+                        <div style="margin-top: 12px;">
                             <span >Comments/Reasons for the transfer. &nbsp;(<i>Internal note</i>)
                                 <font class='error'>&nbsp;*<?=$errors['message']?></font></span>
-                            <textarea name="message" id="message" cols="80" rows="7" wrap="soft" style="width:90%;"><?=$info['message']?></textarea>
+                            <textarea name="message" id="message" cols="80" rows="7" wrap="soft" style="width:90%;margin-top: 12px;"><?=$info['message']?></textarea>
                         </div>
                         <p>
-                            <div  style="margin-left: 50px; margin-top: 5px; margin-bottom: 10px;border: 0px;" align="left">
+                            <div  style="margin-left: 50px; margin-top: 12px; margin-bottom: 10px;border: 0px;" align="left">
                                 <input class="button" type='submit' value='Transfer' />
                                 <input class="button" type='reset' value='Reset' />
                                 <input class="button" type='button' value='Cancel' onClick="history.go(-1)" />
@@ -525,14 +588,14 @@ if(($resp=db_query($sql)) && ($notes=db_num_rows($resp))){
                                 }?>
                             </select><font class='error'>&nbsp;*<?=$errors['staffId']?></font>
                         </div>
-                        <div>
+                        <div style="margin-top: 12px;">
                             <span >Comments/message for assignee. &nbsp;(<i>Saved as internal note</i>)
                                 <font class='error'>&nbsp;*<?=$errors['assign_message']?></font></span>
                             <textarea name="assign_message" id="assign_message" cols="80" rows="7" 
-                                wrap="soft" style="width:90%;"><?=$info['assign_message']?></textarea>
+                                wrap="soft" style="width:90%;margin-top: 12px;"><?=$info['assign_message']?></textarea>
                         </div>
                         <p>
-                            <div  style="margin-left: 50px; margin-top: 5px; margin-bottom: 10px;border: 0px;" align="left">
+                            <div  style="margin-left: 50px; margin-top: 12px; margin-bottom: 10px;border: 0px;" align="left">
                                 <input class="button" type='submit' value='Assign' />
                                 <input class="button" type='reset' value='Reset' />
                                 <input class="button" type='button' value='Cancel' onClick="history.go(-1)" />
@@ -546,3 +609,7 @@ if(($resp=db_query($sql)) && ($notes=db_num_rows($resp))){
     </td>
  </tr>
 </table>
+
+<!--Javascript for upload file-->
+<script type="text/javascript" src="js/upload_file_reply_customize.js" charset="utf-8"></script>
+<script type="text/javascript" src="js/upload_file_note_customize.js" charset="utf-8"></script>

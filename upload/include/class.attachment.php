@@ -117,7 +117,7 @@ class Attachment {
         if(!$errors){        
             $sql=' SET attachment_name='.db_input($vars['attachment_name']).
                  ',ticket_id='.db_input($vars['ticket_id']).
-                 ',updated=NOW()';          
+                 ',updated=NOW(), type='.db_input($vars['type']).', response_id='.db_input($vars['response_id']).', note_id='.db_input($vars['note_id']);          
             if($id) {                
                 $sql='UPDATE '.ATTACHMENT_TABLE.' '.$sql.' WHERE attachment_id='.db_input($id);
                 if(!db_query($sql) || !db_affected_rows())
@@ -137,7 +137,7 @@ class Attachment {
     // get attachment list by ticket_id
     function getAttachmentByTicketId($intTicketId)
     {
-        $sql='SELECT attachment_name FROM '.ATTACHMENT_TABLE.' WHERE ticket_id='.db_input($intTicketId);
+        $sql='SELECT attachment_name FROM '.ATTACHMENT_TABLE.' WHERE ticket_id='.db_input($intTicketId).' AND type=0';
         $arrAttachment = array();       
         if(($res=db_query($sql)) && db_num_rows($res)) {
             while ($row = db_fetch_array($res)) {
@@ -150,7 +150,7 @@ class Attachment {
     
     // delete attachment by attachment_name
     function deleteAttachmentString($strAttachment_name) {              
-        $sql='DELETE FROM '.ATTACHMENT_TABLE.' WHERE attachment_name IN (' . $strAttachment_name . ')';
+        $sql='DELETE FROM '.ATTACHMENT_TABLE.' WHERE attachment_name IN (' . $strAttachment_name . ') AND type=0';
         if(db_query($sql) && ($num=db_affected_rows())){           
             return $num;
         }        

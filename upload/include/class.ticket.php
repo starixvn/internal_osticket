@@ -1397,7 +1397,7 @@ class Ticket {
                         if (in_array($strAttachment, $arrAttachmentByTicket) == false) {
                             $aa++;
                             $arrValue = array('attachment_name' => $strAttachment,
-                                'ticket_id' => $this->getId());
+                                'ticket_id' => $this->getId(), 'type' => '0', 'response_id' => 0, 'note_id' => 0);
                             $objAttachment->create($arrValue, $errors);
                         }
                     }
@@ -1771,7 +1771,7 @@ class Ticket {
             foreach ($arrAttachment as $strAttachment) {
                 if ($strAttachment != '') {
                     $arrValue = array('attachment_name' => $strAttachment,
-                        'ticket_id' => $id);
+                        'ticket_id' => $id, 'type' => '0', 'response_id' => 0, 'note_id' => 0);
                     $objAttachment->create($arrValue, $errors);
                 }
             }
@@ -1844,11 +1844,12 @@ class Ticket {
 
         $var['emailId'] = 0; //clean crap.
         $var['message'] = 'Ticket created by staff';
-
+		
         if (($ticket = Ticket::create($var, $errors, 'staff', false, (!$var['staffId'])))) {  //Staff are alerted only IF the ticket is not being assigned.
             //post issue as a response...
             $msgId = $ticket->getLastMsgId();
             $issue = $ticket->replaceTemplateVars($var['issue']);
+			
             if (($respId = $ticket->postResponse($msgId, $issue, 'none', null, false))) { //Note that we're overwriting alerts.
                 //Mark the ticket unanswered - postResponse marks it answered which is not the desired state.
                 $ticket->markUnAnswered();

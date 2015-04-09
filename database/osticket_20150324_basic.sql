@@ -184,6 +184,9 @@ CREATE TABLE IF NOT EXISTS `ost_attachment` (
   `attachment_name` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
   `ticket_id` int(11) NOT NULL,
   `updated` datetime DEFAULT NULL,
+  `response_id` int(11) DEFAULT '0',
+  `note_id` int(11) DEFAULT '0',
+  `type` int(11) DEFAULT '0' COMMENT '0 for ticket, 1 for post reply, 2 for post internal',
   PRIMARY KEY (`attachment_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1 ;
 
