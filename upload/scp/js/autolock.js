@@ -177,7 +177,9 @@ var autoLock = {
         if(!autoLock.tid) { return false; }
         Http.get({
             url: "ajax.php?api=tickets&f=releaseLock&id="+autoLock.lockId+'&tid='+autoLock.tid,
-            callback: function (resp){ alert(resp);}
+            callback: function (resp){ 
+                //alert(resp);
+            }
             });
     },
 
@@ -198,13 +200,13 @@ var autoLock = {
                     }
                     break;
                 case 'acquire':
-                    if(!lock.id) {
+                    /*if(!lock.id) {
                         autoLock.lockAttempts++;
                         if(warn && (!lock.retry || autoLock.lockAttempts>=autoLock.maxattempts)) {
                             autoLock.retry=false;
                             alert('Unable to lock the ticket. Someone else could be working on the same ticket.'); 
                         }
-                    }   
+                    }*/ 
                     break;
             }
         }

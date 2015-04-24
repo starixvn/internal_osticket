@@ -71,8 +71,8 @@ if($_POST && !$errors):
                 $errors=array_merge($errors,$params->errors());
             }
             //Use locks to avoid double replies
-            if($lock && $lock->getStaffId()!=$thisuser->getId())
-                $errors['err']='Action Denied. Ticket is locked by someone else!';
+            //if($lock && $lock->getStaffId()!=$thisuser->getId())
+            //    $errors['err']='Action Denied. Ticket is locked by someone else!';
 
             //Make sure the email is not banned
             if(!$errors && BanList::isbanned($ticket->getEmail()))

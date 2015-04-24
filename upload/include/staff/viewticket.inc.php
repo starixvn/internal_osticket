@@ -29,8 +29,8 @@ $id=$ticket->getId(); //Ticket ID.
 
 if($staff)
     $warn.='&nbsp;&nbsp;<span class="Icon assignedTicket">Ticket is assigned to '.$staff->getName().'</span>';
-if(!$errors['err'] && ($lock && $lock->getStaffId()!=$thisuser->getId()))
-    $errors['err']='This ticket is currently locked by another staff member!';
+//if(!$errors['err'] && ($lock && $lock->getStaffId()!=$thisuser->getId()))
+//   $errors['err']='This ticket is currently locked by another staff member!';
 if(!$errors['err'] && ($emailBanned=BanList::isbanned($ticket->getEmail())))
     $errors['err']='Email is in banlist! Must be removed before any reply/response';    
 if($ticket->isOverdue())
@@ -397,7 +397,7 @@ if(($resp=db_query($sql)) && ($notes=db_num_rows($resp))){
   </td></tr>
   <?}?>
   <tr> <td align="center">
-        <div class="tabber">
+        <div class="tabber" id="tabber-tickets">
             <div id="reply" class="tabbertab" align="left">
                 <h2>Post Reply</h2>
                 <p>
@@ -613,3 +613,4 @@ if(($resp=db_query($sql)) && ($notes=db_num_rows($resp))){
 <!--Javascript for upload file-->
 <script type="text/javascript" src="js/upload_file_reply_customize.js" charset="utf-8"></script>
 <script type="text/javascript" src="js/upload_file_note_customize.js" charset="utf-8"></script>
+<script type="text/javascript" src="js/hide-tab.js" charset="utf-8"></script>
