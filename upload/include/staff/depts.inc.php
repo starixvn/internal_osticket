@@ -1,10 +1,9 @@
 <?php
 if(!defined('OSTADMININC') || !$thisuser->isadmin()) die('Access Denied');
 //List all Depts
-$sql='SELECT dept.dept_id,dept_name,email.email_id,email.email,email.name as email_name,ispublic,count(staff.staff_id) as users '.
+$sql='SELECT dept.dept_id,dept_name,ispublic,count(staff.staff_id) as users '.
      ',CONCAT_WS(" ",mgr.firstname,mgr.lastname) as manager,mgr.staff_id as manager_id,dept.created,dept.updated  FROM '.DEPT_TABLE.' dept '.
      ' LEFT JOIN '.STAFF_TABLE.' mgr ON dept.manager_id=mgr.staff_id '.
-     ' LEFT JOIN '.EMAIL_TABLE.' email ON dept.email_id=email.email_id '.
      ' LEFT JOIN '.STAFF_TABLE.' staff ON dept.dept_id=staff.dept_id ';
 $depts=db_query($sql.' GROUP BY dept.dept_id ORDER BY dept_name');    
 ?>
@@ -13,13 +12,13 @@ $depts=db_query($sql.' GROUP BY dept.dept_id ORDER BY dept_name');
     <form action="admin.php?t=dept" method="POST" name="depts" onSubmit="return checkbox_checker(document.forms['depts'],1,0);">
     <input type=hidden name='do' value='mass_process'>
     <tr><td>
-    <table border="0" cellspacing=0 cellpadding=2 class="dtable" align="center" width="100%">
+    <table border="0" cellspacing=0 cellpadding=2 class="dtable table-manage-department" align="center" width="100%">
         <tr>
 	        <th width="7px">&nbsp;</th>
 	        <th>Dept. Name</th>
             <th>Type</th>
             <th width=10>Users</th>
-            <th>Primary Outgoing Email</th>
+            <th>Outgoing Email</th>
             <th>Manager</th>
         </tr>
         <?
@@ -34,7 +33,6 @@ $depts=db_query($sql.' GROUP BY dept.dept_id ORDER BY dept_name');
                     $class="$class highlight";
                     $sel=true;
                 }
-                $row['email']=$row['email_name']?($row['email_name'].' &lt;'.$row['email'].'&gt;'):$row['email'];
                 $default=($defaultId==$row['dept_id'])?'(Default)':'';
                 ?>
             <tr class="<?=$class?>" id="<?=$row['dept_id']?>">
@@ -51,7 +49,22 @@ $depts=db_query($sql.' GROUP BY dept.dept_id ORDER BY dept_name');
                     <?}?>
                     </b>
                 </td>
-                <td><a href="admin.php?t=email&id=<?=$row['email_id']?>"><?=$row['email']?></a></td>
+                <td>
+					<ul class="list-email">
+						<? $emails=db_query('SELECT email.email_id, email.email, email.name, email.smtp_active FROM '.DEPT_TABLE.' dept '.
+							' INNER JOIN '.DEPT_EMAIL_TABLE.' deptEmail ON dept.dept_id = deptEmail.dept_id '.
+							' INNER JOIN '.EMAIL_TABLE.' email ON deptEmail.email_id = email.email_id '.
+							' WHERE dept.dept_id = '.$row['dept_id'].' ORDER BY email.name');
+						while (list($id,$email,$name,$smtp) = db_fetch_row($emails)){
+							$email=$name?"$name &lt;$email&gt;":$email;
+							if($smtp)
+								$email.=' (SMTP)';
+							?>
+							<li><a href="admin.php?t=email&id=<?=$id?>"><?=$email?></a></li>
+						<?
+						}?>	
+					</ul>				
+				</td>
                 <td><a href="admin.php?t=staff&id=<?=$row['manager_id']?>"><?=$row['manager']?>&nbsp;</a></td>
             </tr>
             <?

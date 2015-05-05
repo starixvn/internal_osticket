@@ -590,3 +590,17 @@ table.front_layer input[type="text"].date {
    background: url(../images/cal.png) no-repeat center right;
    padding-right: 25px;
 }
+
+/* custom in department page */
+.table-manage-department ul.list-email {
+	font-size: 12px;
+	margin: 0;
+}
+
+.table-manage-department ul.list-email li {
+	padding: 5px 0;
+}
+
+.department_email .chzn-container {
+	width: 450px !important;
+}

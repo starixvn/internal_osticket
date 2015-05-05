@@ -1,3 +1,12 @@
+<!-- attachment -->
+<link href="css/chosen.css" rel="stylesheet">
+<script type="text/javascript" src="js/chosen.jquery.js" charset="utf-8"></script>
+<script type="text/javascript">
+	$(function(){
+		$(".chosen-select").chosen();
+	});
+</script>
+
 <?php
 if(!defined('OSTADMININC') || !$thisuser->isadmin()) die('Access Denied');
 $info=null;
@@ -35,9 +44,8 @@ $info=($errors && $_POST)?Format::input($_POST):Format::htmlchars($info);
         </tr>
         <tr>
             <th>Dept Email:</th>
-            <td>
-                <select name="email_id" class="select_search">
-                    <option value="">Select One</option>
+            <td class="department_email">
+                <select name="email_id" class="chosen-select" multiple="multiple">
                     <?
                     $emails=db_query('SELECT email_id,email,name,smtp_active FROM '.EMAIL_TABLE);
                     while (list($id,$email,$name,$smtp) = db_fetch_row($emails)){

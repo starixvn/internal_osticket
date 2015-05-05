@@ -123,6 +123,7 @@
 
     define('STAFF_TABLE',TABLE_PREFIX.'staff');
     define('DEPT_TABLE',TABLE_PREFIX.'department');
+	define('DEPT_EMAIL_TABLE',TABLE_PREFIX.'department_email');
     define('TOPIC_TABLE',TABLE_PREFIX.'help_topic');
     define('GROUP_TABLE',TABLE_PREFIX.'groups');
    
