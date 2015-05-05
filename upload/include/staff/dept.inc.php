@@ -15,6 +15,7 @@ if($dept && $_REQUEST['a']!='new'){
     $title='Update Department';
     $action='update';
     $info=$dept->getInfo();
+	$emailIds=$dept->getEmailIdsByDeptId();
 }else {
     $title='New Department';
     $action='create';
@@ -23,7 +24,6 @@ if($dept && $_REQUEST['a']!='new'){
     $info['message_auto_response']=isset($info['message_auto_response'])?$info['message_auto_response']:1;
 }
 $info=($errors && $_POST)?Format::input($_POST):Format::htmlchars($info);
-
 ?>
 <div class="msg"><?=$title?></div>
 <table width="100%" border="0" cellspacing=0 cellpadding=0>
@@ -45,15 +45,15 @@ $info=($errors && $_POST)?Format::input($_POST):Format::htmlchars($info);
         <tr>
             <th>Dept Email:</th>
             <td class="department_email">
-                <select name="email_id" class="chosen-select" multiple="multiple">
+                <select name="emailIds[]" class="chosen-select" multiple="multiple">
                     <?
                     $emails=db_query('SELECT email_id,email,name,smtp_active FROM '.EMAIL_TABLE);
                     while (list($id,$email,$name,$smtp) = db_fetch_row($emails)){
                         $email=$name?"$name &lt;$email&gt;":$email;
                         if($smtp)
                             $email.=' (SMTP)';
-                        ?>
-                     <option value="<?=$id?>"<?=($info['email_id']==$id)?'selected':''?>><?=$email?></option>
+						?>
+						<option value="<?=$id?>"<?=(in_array($id, $emailIds) == true)?'selected':''?>><?=$email?></option>
                     <?
                     }?>
                  </select>

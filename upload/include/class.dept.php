@@ -20,7 +20,7 @@ class Dept {
     var $signature;
     
     var $tplId;
-
+	
     var $emailId;
     var $email;
 
@@ -52,18 +52,37 @@ class Dept {
     function getName(){
         return $this->deptname;
     }
-
         
     function getEmailId(){
         return $this->emailId;
     }
 
-    function getEmail(){
-        
+    function getEmail(){        
         if(!$this->email && $this->emailId)
             $this->email= new Email($this->emailId);
             
         return $this->email;
+    }
+	
+	// get email list by dept_id
+    function getEmailIdsByDeptId()
+    {
+		$emailIds=array();
+		
+		if ($this->id){
+			$sql='SELECT email.email_id FROM '.DEPT_TABLE.' dept '.
+				' INNER JOIN '.DEPT_EMAIL_TABLE.' deptEmail ON dept.dept_id = deptEmail.dept_id '.
+				' INNER JOIN '.EMAIL_TABLE.' email ON deptEmail.email_id = email.email_id '.
+				' WHERE dept.dept_id = '.db_input($this->id).' ORDER BY email.email_id';
+			     
+			if(($res=db_query($sql)) && db_num_rows($res)) {
+				while ($row = db_fetch_array($res)) {
+					$emailIds[] = $row['email_id'];
+				}
+			}
+		}
+		
+		return $emailIds;
     }
 
     function getTemplateId() {
@@ -131,8 +150,6 @@ class Dept {
         }
         return false;
     }
-
-
     
 	function getInfoById($id) {
 		$sql='SELECT * FROM '.DEPT_TABLE.' WHERE dept_id='.db_input($id);
@@ -141,7 +158,6 @@ class Dept {
         
         return null;
 	}
-
     
 	function getIdByName($name) {
         $id=0;
@@ -195,19 +211,21 @@ class Dept {
             db_query('UPDATE '.STAFF_TABLE.' SET dept_id='.db_input($cfg->getDefaultDeptId()).' WHERE dept_id='.db_input($id));
             //make help topic using the dept default to default-dept.
             db_query('UPDATE '.TOPIC_TABLE.' SET dept_id='.db_input($cfg->getDefaultDeptId()).' WHERE dept_id='.db_input($id));
+			//Delete email list
+			db_query('DELETE FROM '.DEPT_EMAIL_TABLE.' WHERE dept_id='.db_input($id));
             return $num;
         }
-        return 0;
-        
+        return 0;        
     }
 
     function save($id,$vars,&$errors) {
         global $cfg;
+		$emailIds = $_POST['emailIds'];
                 
         if($id && $id!=$_POST['dept_id'])
             $errors['err']='Missing or invalid Dept ID';
             
-        if(!$_POST['email_id'] || !is_numeric($_POST['email_id']))
+        if(!$emailIds)
             $errors['email_id']='Dept email required';
             
         if(!is_numeric($_POST['tpl_id']))
@@ -233,31 +251,41 @@ class Dept {
             $errors['ispublic']='Default department can not be private';
 
         if(!$errors){
-        
-            $sql=' SET updated=NOW() '.
-                 ',ispublic='.db_input($_POST['ispublic']).
-                 ',email_id='.db_input($_POST['email_id']).
-                 ',tpl_id='.db_input($_POST['tpl_id']).
-                 ',autoresp_email_id='.db_input($_POST['autoresp_email_id']).
-                 ',manager_id='.db_input($_POST['manager_id']?$_POST['manager_id']:0).
-                 ',dept_name='.db_input(Format::striptags($_POST['dept_name'])).
-                 ',dept_signature='.db_input(Format::striptags($_POST['dept_signature'])).
-                 ',ticket_auto_response='.db_input($_POST['ticket_auto_response']).
-                 ',message_auto_response='.db_input($_POST['message_auto_response']).
-                 ',can_append_signature='.db_input(isset($_POST['can_append_signature'])?1:0);
+			$sql=' SET updated=NOW() '.
+			 ',ispublic='.db_input($_POST['ispublic']).
+			 ',email_id='.db_input(1).
+			 ',tpl_id='.db_input($_POST['tpl_id']).
+			 ',autoresp_email_id='.db_input($_POST['autoresp_email_id']).
+			 ',manager_id='.db_input($_POST['manager_id']?$_POST['manager_id']:0).
+			 ',dept_name='.db_input(Format::striptags($_POST['dept_name'])).
+			 ',dept_signature='.db_input(Format::striptags($_POST['dept_signature'])).
+			 ',ticket_auto_response='.db_input($_POST['ticket_auto_response']).
+			 ',message_auto_response='.db_input($_POST['message_auto_response']).
+			 ',can_append_signature='.db_input(isset($_POST['can_append_signature'])?1:0);
 
-            if($id) {
-                $sql='UPDATE '.DEPT_TABLE.' '.$sql.' WHERE dept_id='.db_input($id);
-                if(!db_query($sql) || !db_affected_rows())
-                    $errors['err']='Unable to update '.Format::input($_POST['dept_name']).' Dept. Error occured';
-            }else{
-                $sql='INSERT INTO '.DEPT_TABLE.' '.$sql.',created=NOW()';
-                if(db_query($sql) && ($deptID=db_insert_id()))
-                    return $deptID;
+			if($id) {
+				$sql='UPDATE '.DEPT_TABLE.' '.$sql.' WHERE dept_id='.db_input($id);
+				if(!db_query($sql) || !db_affected_rows())
+					$errors['err']='Unable to update '.Format::input($_POST['dept_name']).' Dept. Error occured';
+				else {
+					db_query('DELETE FROM '.DEPT_EMAIL_TABLE.' WHERE dept_id='.db_input($id));
+					foreach ($emailIds as $email_id) {
+						db_query('INSERT INTO '.DEPT_EMAIL_TABLE.' SET dept_id='.db_input($id).',email_id='.db_input($email_id));
+					}
+				}				
+			}else{
+				$sql='INSERT INTO '.DEPT_TABLE.' '.$sql.',created=NOW()';
+				if(db_query($sql) && ($deptID=db_insert_id())){
+					foreach ($emailIds as $email_id) {
+						db_query('INSERT INTO '.DEPT_EMAIL_TABLE.' SET dept_id='.db_input($deptID).',email_id='.db_input($email_id));
+					}
+					
+					return $deptID;
+				}
 
-                $errors['err']='Unable to create department. Internal error';
-            }
-        }
+				$errors['err']='Unable to create department. Internal error';
+			}
+		}
 
         return $errors?false:true;
     }
