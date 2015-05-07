@@ -51,14 +51,13 @@ $depts=db_query($sql.' GROUP BY dept.dept_id ORDER BY dept_name');
                 </td>
                 <td>
 					<ul class="list-email">
-						<? $emails=db_query('SELECT email.email_id, email.email, email.name, email.smtp_active FROM '.DEPT_TABLE.' dept '.
+						<? $emails=db_query('SELECT email.email_id, email.email FROM '.DEPT_TABLE.' dept '.
 							' INNER JOIN '.DEPT_EMAIL_TABLE.' deptEmail ON dept.dept_id = deptEmail.dept_id '.
 							' INNER JOIN '.EMAIL_TABLE.' email ON deptEmail.email_id = email.email_id '.
-							' WHERE dept.dept_id = '.$row['dept_id'].' ORDER BY email.name');
+							' WHERE dept.dept_id = '.$row['dept_id'].
+							' ORDER BY email.email');
 						while (list($id,$email,$name,$smtp) = db_fetch_row($emails)){
 							$email=$name?"$name &lt;$email&gt;":$email;
-							if($smtp)
-								$email.=' (SMTP)';
 							?>
 							<li><a href="admin.php?t=email&id=<?=$id?>"><?=$email?></a></li>
 						<?

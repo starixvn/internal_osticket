@@ -70,7 +70,7 @@ class Dept {
 		$emailIds=array();
 		
 		if ($this->id){
-			$sql='SELECT email.email_id FROM '.DEPT_TABLE.' dept '.
+			$sql='SELECT DISTINCT email.email_id FROM '.DEPT_TABLE.' dept '.
 				' INNER JOIN '.DEPT_EMAIL_TABLE.' deptEmail ON dept.dept_id = deptEmail.dept_id '.
 				' INNER JOIN '.EMAIL_TABLE.' email ON deptEmail.email_id = email.email_id '.
 				' WHERE dept.dept_id = '.db_input($this->id).' ORDER BY email.email_id';
@@ -90,7 +90,6 @@ class Dept {
     }
    
     function getAutoRespEmail() {
-
         if(!$this->autorespEmail && $this->row['autoresp_email_id'])
             $this->autorespEmail= new Email($this->row['autoresp_email_id']);
         else // Defualt to dept email if autoresp is not specified.

@@ -149,7 +149,6 @@ class Staff {
     }
 
     function getDept(){
-
         if(!$this->dept && $this->dept_id)
             $this->dept= new Dept($this->dept_id);
 

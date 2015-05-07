@@ -36,10 +36,10 @@ define('ADMIN_EMAIL','edward.nguyen@nexcel.vn');
 
 #Mysql Login info
 define('DBTYPE','mysql');
-define('DBHOST','10.19.10.22'); 
+define('DBHOST','127.0.0.1'); 
 define('DBNAME','osticket');
-define('DBUSER','luckystar2203');
-define('DBPASS','123456');
+define('DBUSER','root');
+define('DBPASS','root');
 /*
 define('DBHOST','10.18.200.204'); 
 define('DBNAME','osticket');

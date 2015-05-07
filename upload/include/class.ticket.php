@@ -70,8 +70,6 @@ class Ticket {
     }
 
     function load($id) {
-
-
         $sql = ' SELECT  ticket.*,topic.topic_id as topicId,lock_id,dept_name,lea.league_name,ticket.sport_type,spor.sport_name
                ,tra.actor_name AS trader_name,su.actor_name AS suspender_name,cs.actor_name AS csd_name,prov.actor_name AS provider_name,priority_desc' .
                 ",CASE home_id
@@ -287,7 +285,26 @@ class Ticket {
 
     function getDeptName() {
         return $this->dept_name;
-    }
+    }	
+	
+	function getDepts() {
+		$depts= array();
+		
+		if ($this->id){
+			$sql='SELECT DISTINCT d.dept_id FROM '.TICKET_TABLE.' t '.
+				' INNER JOIN '.TICKET_DEPARTMENT_TABLE.' td ON t.ticket_id = td.ticket_id '.
+				' INNER JOIN '.DEPT_TABLE.' d ON td.dept_id = d.dept_id '.
+				' WHERE t.ticket_id = '.db_input($this->id).' ORDER BY d.dept_name';
+			     
+			if(($res=db_query($sql)) && db_num_rows($res)) {
+				while ($row = db_fetch_array($res)) {
+					array_push($depts, new Dept($row['dept_id']));
+				}
+			}
+		}
+		
+		return $depts;
+	}
 
     function getPriorityId() {
         return $this->priority_id;
@@ -322,7 +339,6 @@ class Ticket {
     }
 
     function getLock() {
-
         if (!$this->tlock && $this->lock_id)
             $this->tlock = new TicketLock($this->lock_id);
 
@@ -352,7 +368,6 @@ class Ticket {
     }
 
     function getDept() {
-
         if (!$this->dept && $this->dept_id)
             $this->dept = new Dept($this->dept_id);
         return $this->dept;
@@ -363,7 +378,6 @@ class Ticket {
     }
 
     function getStaff() {
-
         if (!$this->staff && $this->staff_id)
             $this->staff = new Staff($this->staff_id);
         return $this->staff;
@@ -374,7 +388,6 @@ class Ticket {
     }
 
     function getTopic() {
-
         if (!$this->topic && $this->topic_id)
             $this->topic = new Topic($this->topic_id);
 
@@ -382,7 +395,6 @@ class Ticket {
     }
 
     function getLastRespondent() {
-
         $sql = 'SELECT  resp.staff_id FROM ' . TICKET_RESPONSE_TABLE . ' resp LEFT JOIN ' . STAFF_TABLE . ' USING(staff_id) ' .
                 ' WHERE  resp.ticket_id=' . db_input($this->getId()) . ' AND resp.staff_id>0  ORDER BY resp.created DESC LIMIT 1';
         $res = db_query($sql);
@@ -393,8 +405,6 @@ class Ticket {
     }
 
     function getLastMessageDate() {
-
-
         if ($this->lastmsgdate)
             return $this->lastmsgdate;
 
@@ -408,8 +418,6 @@ class Ticket {
     }
 
     function getLastResponseDate() {
-
-
         if ($this->lastrespdate)
             return $this->lastrespdate;
 
@@ -456,7 +464,6 @@ class Ticket {
 
     //DeptId can NOT be 0. No orphans please!
     function setDeptId($deptId) {
-
         if (!$deptId)
             return false;
 
@@ -472,7 +479,6 @@ class Ticket {
 
     //Status helper.
     function setStatus($status) {
-
         if (strcasecmp($this->getStatus(), $status) == 0)
             return true; //No changes needed.
 
@@ -495,7 +501,6 @@ class Ticket {
 
     //Close the ticket
     function close() {
-
         $sql = 'UPDATE ' . TICKET_TABLE . ' SET status=' . db_input('closed') . ',staff_id=0,isoverdue=0,duedate=NULL,updated=NOW(),closed=NOW() ' .
                 ' WHERE ticket_id=' . db_input($this->getId());
         return (db_query($sql) && db_affected_rows()) ? true : false;
@@ -580,60 +585,61 @@ class Ticket {
         $sql = 'UPDATE ' . TICKET_TABLE . ' SET isoverdue=1,updated=NOW() WHERE ticket_id=' . db_input($this->getId());
         if (db_query($sql) && db_affected_rows()) {
             //echo $sql;
-            $dept = $this->getDept();
+            $depts = $this->getDepts();
+			
+			foreach($depts as $dept) {
+				if (!$dept || !($tplId = $dept->getTemplateId()))
+					$tplId = $cfg->getDefaultTemplateId();			
 
-            if (!$dept || !($tplId = $dept->getTemplateId()))
-                $tplId = $cfg->getDefaultTemplateId();
+				//if requested && enabled fire nasty alerts.
+				if ($bitch && $cfg->alertONOverdueTicket()) {
+					$sql = 'SELECT ticket_overdue_subj,ticket_overdue_body FROM ' . EMAIL_TEMPLATE_TABLE .
+							' WHERE cfg_id=' . db_input($cfg->getId()) . ' AND tpl_id=' . db_input($tplId);
+					if (($resp = db_query($sql)) && db_num_rows($resp) && list($subj, $body) = db_fetch_row($resp)) {
+						$body = $this->replaceTemplateVars($body);
+						$subj = $this->replaceTemplateVars($subj);
 
-            //if requested && enabled fire nasty alerts.
-            if ($bitch && $cfg->alertONOverdueTicket()) {
-                $sql = 'SELECT ticket_overdue_subj,ticket_overdue_body FROM ' . EMAIL_TEMPLATE_TABLE .
-                        ' WHERE cfg_id=' . db_input($cfg->getId()) . ' AND tpl_id=' . db_input($tplId);
-                if (($resp = db_query($sql)) && db_num_rows($resp) && list($subj, $body) = db_fetch_row($resp)) {
+						if (!($email = $cfg->getAlertEmail()))
+							$email = $cfg->getDefaultEmail();
 
-                    $body = $this->replaceTemplateVars($body);
-                    $subj = $this->replaceTemplateVars($subj);
+						if ($email && $email->getId()) {
+							//Fire and email to admin. No questions asked.
+							$alert = str_replace("%staff", 'Admin', $body);
+							$email->send($cfg->getAdminEmail(), $subj, $alert);
 
-                    if (!($email = $cfg->getAlertEmail()))
-                        $email = $cfg->getDefaultEmail();
-
-                    if ($email && $email->getId()) {
-                        //Fire and email to admin. No questions asked.
-                        $alert = str_replace("%staff", 'Admin', $body);
-                        $email->send($cfg->getAdminEmail(), $subj, $alert);
-
-                        /*                         * * Build list of recipients and fire the alerts ** */
-                        $recipients = array();
-                        //Assigned staff... if any
-                        if ($this->isAssigned() && $cfg->alertAssignedONOverdueTicket()) {
-                            $recipients[] = $this->getStaff();
-                        } elseif ($cfg->alertDeptMembersONOverdueTicket()) { //Alert assigned or dept members not both
-                            //All dept members.
-                            $sql = 'SELECT staff_id FROM ' . STAFF_TABLE . ' WHERE dept_id=' . db_input($dept->getId());
-                            if (($users = db_query($sql)) && db_num_rows($users)) {
-                                while (list($id) = db_fetch_row($users))
-                                    $recipients[] = new Staff($id);     //possible mem issues with a large number of staff?
-                            }
-                        }
-                        //Always blame the manager
-                        if ($cfg->alertDeptManagerONOverdueTicket() && $dept) {
-                            $recipients[] = $dept->getManager();
-                        }
-                        //Ok...we are ready to go....
-                        $sentlist = array();
-                        foreach ($recipients as $k => $staff) {
-                            if (!$staff || !is_object($staff) || !$staff->isAvailable())
-                                continue;
-                            if (in_array($staff->getEmail(), $sentlist))
-                                continue; //avoid duplicate emails.
-                            $alert = str_replace("%staff", $staff->getFirstName(), $body);
-                            $email->send($staff->getEmail(), $subj, $alert);
-                        }
-                    }
-                }else {
-                    Sys::log(LOG_WARNING, 'Template Fetch Error', "Unable to fetch 'overdue' alert template #$tplId");
-                }
-            }
+							/*                         * * Build list of recipients and fire the alerts ** */
+							$recipients = array();
+							//Assigned staff... if any
+							if ($this->isAssigned() && $cfg->alertAssignedONOverdueTicket()) {
+								$recipients[] = $this->getStaff();
+							} elseif ($cfg->alertDeptMembersONOverdueTicket()) { //Alert assigned or dept members not both
+								//All dept members.
+								$sql = 'SELECT staff_id FROM ' . STAFF_TABLE . ' WHERE dept_id=' . db_input($dept->getId());
+								if (($users = db_query($sql)) && db_num_rows($users)) {
+									while (list($id) = db_fetch_row($users))
+										$recipients[] = new Staff($id);     //possible mem issues with a large number of staff?
+								}
+							}
+							//Always blame the manager
+							if ($cfg->alertDeptManagerONOverdueTicket() && $dept) {
+								$recipients[] = $dept->getManager();
+							}
+							//Ok...we are ready to go....
+							$sentlist = array();
+							foreach ($recipients as $k => $staff) {
+								if (!$staff || !is_object($staff) || !$staff->isAvailable())
+									continue;
+								if (in_array($staff->getEmail(), $sentlist))
+									continue; //avoid duplicate emails.
+								$alert = str_replace("%staff", $staff->getFirstName(), $body);
+								$email->send($staff->getEmail(), $subj, $alert);
+							}
+						}
+					}else {
+						Sys::log(LOG_WARNING, 'Template Fetch Error', "Unable to fetch 'overdue' alert template #$tplId");
+					}
+				}
+			}
             return true;
         }
         return false;
@@ -736,7 +742,7 @@ class Ticket {
             if (!$newticket) {
                 //Success and the message is being appended to previously opened ticket.
                 //Alerts for new tickets are sent on create.
-                $dept = $this->getDept();
+                $dept = $this->getDepts();
                 //Reopen if the status is closed...
                 if (!$this->isOpen()) {
                     $this->reopen();
@@ -1064,10 +1070,9 @@ class Ticket {
     }
 
     function delete() {
-
-
         if (db_query('DELETE FROM ' . TICKET_TABLE . ' WHERE ticket_id=' . $this->getId()) && db_affected_rows()):
-            db_query('DELETE FROM ' . TICKET_MESSAGE_TABLE . ' WHERE ticket_id=' . db_input($this->getId()));
+            db_query('DELETE FROM ' . TICKET_DEPARTMENT_TABLE .' WHERE ticket_id=' . $this->getId());
+			db_query('DELETE FROM ' . TICKET_MESSAGE_TABLE . ' WHERE ticket_id=' . db_input($this->getId()));
             db_query('DELETE FROM ' . TICKET_RESPONSE_TABLE . ' WHERE ticket_id=' . db_input($this->getId()));
             db_query('DELETE FROM ' . TICKET_NOTE_TABLE . ' WHERE ticket_id=' . db_input($this->getId()));
             $this->deleteAttachmentByTicketId();
@@ -1200,26 +1205,21 @@ class Ticket {
         $fields['email'] = array('type' => 'email', 'null' => 1, 'error' => 'Formating email was not correct');
         $fields['note'] = array('type' => 'text', 'required' => 1, 'error' => 'Reason for the update required');
         $fields['subject'] = array('type' => 'string', 'required' => 1, 'error' => 'Subject required');
-        // customized osticket
         $fields['sport_type'] = array('type' => 'string', 'required' => 1, 'error' => 'Sport required');
-        //$fields['league'] = array('type' => 'string', 'required' => 1, 'error' => 'League required');
         $fields['match'] = array('type' => 'string', 'required' => 1, 'error' => 'Match required');
-        /*
-          $fields['trader']  = array('type'=>'string',   'required'=>1, 'error'=>'Trader required');
-          $fields['suspender']  = array('type'=>'string',   'required'=>1, 'error'=>'Suspender required');
-          $fields['csd']  = array('type'=>'string',   'required'=>1, 'error'=>'Csd required');
-         */
-        // end
         $fields['topicId'] = array('type' => 'int', 'required' => 0, 'error' => 'Invalid Selection');
         $fields['pri'] = array('type' => 'int', 'required' => 0, 'error' => 'Invalid Priority');
         $fields['phone'] = array('type' => 'phone', 'required' => 0, 'error' => 'Valid phone # required');
         $fields['duedate'] = array('type' => 'date', 'required' => 0, 'error' => 'Invalid date - must be MM/DD/YY');
 
-
         $params = new Validator($fields);
         if (!$params->validate($var)) {
             $errors = array_merge($errors, $params->errors());
         }
+		
+		if(!$var['deptIds']){
+			$errors['deptId'] = 'Dept. required';
+		}
 
         if ($var['duedate']) {
             if ($this->isClosed())
@@ -1228,8 +1228,6 @@ class Ticket {
                 $errors['time'] = 'Select time';
             elseif (strtotime($var['duedate'] . ' ' . $var['time']) === false)
                 $errors['duedate'] = 'Invalid duedate';
-            //elseif(strtotime($var['duedate'].' '.$var['time'])<=time())
-            //$errors['duedate']='Due date must be in the future';
         }
 
         //Make sure phone extension is valid
@@ -1310,7 +1308,6 @@ class Ticket {
         $arrIBCMatch['home_id'] = $intHomeId;
         $arrIBCMatch['away_id'] = $intAwayId;
 
-
         // insert match
         $objMatch = new Match();
         $arrMatch = $objMatch->getInfoByIbcId($var['match']);
@@ -1321,20 +1318,6 @@ class Ticket {
         }
 
         if (!$errors) {
-
-            // customized osticket
-            /*
-              $sql='UPDATE '.TICKET_TABLE.' SET updated=NOW() '.
-              ',email='.db_input($var['email']).
-              ',name='.db_input(Format::striptags($var['name'])).
-              ',subject='.db_input(Format::striptags($var['subject'])).
-              ',phone="'.db_input($var['phone'],false).'"'.
-              ',phone_ext='.db_input($var['phone_ext']?$var['phone_ext']:NULL).
-              ',priority_id='.db_input($var['pri']).
-              ',topic_id='.db_input($var['topicId']).
-              ',duedate='.($var['duedate']?db_input(date('Y-m-d G:i',Misc::dbtime($var['duedate'].' '.$var['time']))):'NULL');
-             */
-
             $strDueDate = $var['duedate'] ? db_input(date('Y-m-d G:i', strtotime($var['duedate'] . ' ' . $var['time']))) : 'NULL';
             $sql = 'UPDATE ' . TICKET_TABLE . ' SET `updated`=NOW() ' .
                     ',`email`=' . db_input($var['email']) .
@@ -1352,7 +1335,6 @@ class Ticket {
                     ',`priority_id`=' . db_input($var['pri']) .
                     ',`topic_id`=' . db_input($var['topicId']) .
                     ',`duedate`=' . $strDueDate;
-            // end
             if ($var['duedate']) { //We are setting new duedate...
                 $sql.=',isoverdue=0';
             }
@@ -1361,9 +1343,13 @@ class Ticket {
             }
             $sql.=' WHERE ticket_id=' . db_input($this->getId());
 
-
             if (db_query($sql)) {
-
+				db_query('DELETE FROM ' . TICKET_DEPARTMENT_TABLE .' WHERE ticket_id=' . $this->getId());
+				$deptIds = $var['deptIds'];
+				foreach ($deptIds as $deptId) {
+					db_query('INSERT INTO '.TICKET_DEPARTMENT_TABLE.' SET ticket_id='.db_input($this->getId()).',dept_id='.db_input($deptId));
+				}
+				
                 // Attachment
                 $objAttachment = new Attachment();
                 $arrAttachment = explode(',', $var['attachment_name']);
@@ -1428,26 +1414,11 @@ class Ticket {
         $fields['name'] = array('type' => 'string', 'required' => 1, 'error' => 'Name required');
         $fields['email'] = array('type' => 'email', 'null' => 1, 'error' => 'Formating email was not correct');
         $fields['subject'] = array('type' => 'string', 'required' => 1, 'error' => 'Subject required');
-        // customized osticket
         $fields['sport_type'] = array('type' => 'string', 'required' => 1, 'error' => 'Sport required');
-        //$fields['league'] = array('type' => 'string', 'required' => 1, 'error' => 'League required');
         $fields['match'] = array('type' => 'string', 'required' => 1, 'error' => 'Match required');
-        /*
-          $fields['trader']  = array('type'=>'string',   'required'=>1, 'error'=>'Trader required');
-          $fields['suspender']  = array('type'=>'string',   'required'=>1, 'error'=>'Suspender required');
-          $fields['csd']  = array('type'=>'string',   'required'=>1, 'error'=>'Csd required');
-         */
-        //end
         $fields['message'] = array('type' => 'text', 'required' => 1, 'error' => 'Message required');
-        if (strcasecmp($origin, 'web') == 0) { //Help topic only applicable on web tickets.
-            $fields['topicId'] = array('type' => 'int', 'required' => 1, 'error' => 'Select help topic');
-        } elseif (strcasecmp($origin, 'staff') == 0) { //tickets created by staff...e.g on callins.
-            $fields['deptId'] = array('type' => 'int', 'required' => 1, 'error' => 'Dept. required');
-            $fields['source'] = array('type' => 'string', 'required' => 1, 'error' => 'Indicate source');
-            $fields['duedate'] = array('type' => 'date', 'required' => 0, 'error' => 'Invalid date - must be MM/DD/YY');
-        } else { //Incoming emails
-            $fields['emailId'] = array('type' => 'int', 'required' => 1, 'error' => 'Email unknown');
-        }
+		$fields['source'] = array('type' => 'string', 'required' => 1, 'error' => 'Indicate source');
+		$fields['duedate'] = array('type' => 'date', 'required' => 0, 'error' => 'Invalid date - must be MM/DD/YY');
         $fields['pri'] = array('type' => 'int', 'required' => 0, 'error' => 'Invalid Priority');
         $fields['phone'] = array('type' => 'phone', 'required' => 0, 'error' => 'Valid phone # required');
 
@@ -1455,6 +1426,10 @@ class Ticket {
         if (!$validate->validate($var)) {
             $errors = array_merge($errors, $validate->errors());
         }
+		
+		if(!$var['deptIds']){
+			$errors['deptId'] = 'Dept. required';
+		}
 
         //Make sure the email is not banned
         if (!$errors && BanList::isbanned($var['email'])) {
@@ -1494,39 +1469,42 @@ class Ticket {
         //check ticket limits..if limit set is >0 
         //TODO: Base ticket limits on SLA...
 
-        if ($var['email'] && !$errors && $cfg->getMaxOpenTickets() > 0 && strcasecmp($origin, 'staff')) {
+        if ($var['email'] && !$errors && $cfg->getMaxOpenTickets() > 0) {
             $openTickets = Ticket::getOpenTicketsByEmail($var['email']);
             if ($openTickets >= $cfg->getMaxOpenTickets()) {
                 $errors['err'] = "You've reached the maximum open tickets allowed.";
                 //Send the notice only once (when the limit is reached) incase of autoresponders at client end.
                 if ($cfg->getMaxOpenTickets() == $openTickets && $cfg->sendOverlimitNotice()) {
-                    if ($var['deptId'])
-                        $dept = new Dept($var['deptId']);
+					if($var['deptIds']) {
+						foreach ($var['deptIds'] as $deptId) {
+							$dept = new Dept($deptId);
+							
+							if (!$dept || !($tplId = $dept->getTemplateId()))
+								$tplId = $cfg->getDefaultTemplateId();
+							
+							$sql = 'SELECT ticket_overlimit_subj,ticket_overlimit_body FROM ' . EMAIL_TEMPLATE_TABLE .
+								' WHERE cfg_id=' . db_input($cfg->getId()) . ' AND tpl_id=' . db_input($tplId);
+							$resp = db_query($sql);
+							if (db_num_rows($resp) && list($subj, $body) = db_fetch_row($resp)) {
+								$body = str_replace("%name", $var['name'], $body);
+								$body = str_replace("%email", $var['email'], $body);
+								$body = str_replace("%url", $cfg->getBaseUrl(), $body);
+								$body = str_replace('%signature', ($dept && $dept->isPublic()) ? $dept->getSignature() : '', $body);
 
-                    if (!$dept || !($tplId = $dept->getTemplateId()))
-                        $tplId = $cfg->getDefaultTemplateId();
+								if (!$dept || !($email = $dept->getAutoRespEmail()))
+									$email = $cfg->getDefaultEmail();
 
-                    $sql = 'SELECT ticket_overlimit_subj,ticket_overlimit_body FROM ' . EMAIL_TEMPLATE_TABLE .
-                            ' WHERE cfg_id=' . db_input($cfg->getId()) . ' AND tpl_id=' . db_input($tplId);
-                    $resp = db_query($sql);
-                    if (db_num_rows($resp) && list($subj, $body) = db_fetch_row($resp)) {
-
-                        $body = str_replace("%name", $var['name'], $body);
-                        $body = str_replace("%email", $var['email'], $body);
-                        $body = str_replace("%url", $cfg->getBaseUrl(), $body);
-                        $body = str_replace('%signature', ($dept && $dept->isPublic()) ? $dept->getSignature() : '', $body);
-
-                        if (!$dept || !($email = $dept->getAutoRespEmail()))
-                            $email = $cfg->getDefaultEmail();
-
-                        if ($email)
-                            $email->send($var['email'], $subj, $body);
-                    }
-                    //Alert admin...this might be spammy (no option to disable)...but it is helpful..I think.
-                    $msg = 'Support ticket request denied for ' . $var['email'] . "\n" .
-                            'Open ticket:' . $openTickets . "\n" .
-                            'Max Allowed:' . $cfg->getMaxOpenTickets() . "\n\nNotice only sent once";
-                    Sys::alertAdmin('Overlimit Notice', $msg);
+								if ($email)
+									$email->send($var['email'], $subj, $body);
+							}
+						}
+						
+						//Alert admin...this might be spammy (no option to disable)...but it is helpful..I think.
+						$msg = 'Support ticket request denied for ' . $var['email'] . "\n" .
+								'Open ticket:' . $openTickets . "\n" .
+								'Max Allowed:' . $cfg->getMaxOpenTickets() . "\n\nNotice only sent once";
+						Sys::alertAdmin('Overlimit Notice', $msg);
+					}
                 }
             }
         }
@@ -1537,295 +1515,258 @@ class Ticket {
         }
 
         // OK...just do it.
-        $deptId = $var['deptId']; //pre-selected Dept if any.
         $priorityId = $var['pri'];
         $source = ucfirst($var['source']);
         $topic = NULL;
-        // Intenal mapping magic...see if we need to overwrite anything
-        if (isset($var['topicId'])) { //Ticket created via web by user/or staff
-            if ($var['topicId'] && ($topic = new Topic($var['topicId'])) && $topic->getId()) {
-                $deptId = $deptId ? $deptId : $topic->getDeptId();
-                $priorityId = $priorityId ? $priorityId : $topic->getPriorityId();
-                $topicDesc = $topic->getName();
-                if ($autorespond)
-                    $autorespond = $topic->autoRespond();
-            }
-            $source = $var['source'] ? $var['source'] : 'Web';
-        }elseif ($var['emailId'] && !$var['deptId']) { //Emailed Tickets
-            $email = new Email($var['emailId']);
-            if ($email && $email->getId()) {
-                $deptId = $email->getDeptId();
-                $priorityId = $priorityId ? $priorityId : $email->getPriorityId();
-                if ($autorespond)
-                    $autorespond = $email->autoRespond();
-            }
-            $email = null;
-            $source = 'Email';
-        }elseif ($var['deptId']) { //Opened by staff.
-            $deptId = $var['deptId'];
-            $source = ucfirst($var['source']);
-        }
+        $deptIds = $var['deptIds'];
+		$source = ucfirst($var['source']);
+		$topicId = $var['topicId'] ? $var['topicId'] : 0;
+		
+		// Intenal mapping magic...see if we need to overwrite anything
+		if (isset($var['topicId'])) { //Ticket created via web by staff
+			if ($var['topicId'] && ($topic = new Topic($var['topicId'])) && $topic->getId()) {
+				$priorityId = $priorityId ? $priorityId : $topic->getPriorityId();
+				$topicDesc = $topic->getName();
+				if ($autorespond)
+					$autorespond = $topic->autoRespond();
+			}
+		}
 
-        //Don't auto respond to mailer daemons.
-        if (strpos(strtolower($var['email']), 'mailer-daemon@') !== false || strpos(strtolower($var['email']), 'postmaster@') !== false)
-            $autorespond = false;
+		//Don't auto respond to mailer daemons.
+		if (strpos(strtolower($var['email']), 'mailer-daemon@') !== false || strpos(strtolower($var['email']), 'postmaster@') !== false)
+			$autorespond = false;
 
-        //Last minute checks
-        $priorityId = $priorityId ? $priorityId : $cfg->getDefaultPriorityId();
-        $deptId = $deptId ? $deptId : $cfg->getDefaultDeptId();
-        $topicId = $var['topicId'] ? $var['topicId'] : 0;
-        $ipaddress = $var['ip'] ? $var['ip'] : $_SERVER['REMOTE_ADDR'];
-        
-        // insert data from ibc database to osticket database
-        $objIBCMatch = new IBC_Match();
-        $arrIBCMatch = $objIBCMatch->getInfoById($var['match']);
-        
-        // call IBC_LEAGUE class        
-        $objIBCLeague = new IBC_League();
-        if($var['league'] != 0 || $var['league'] != "") {
-            $league_id = $var['league'];
-        } else {
-            $league_id = $arrIBCMatch['league_id'];
-        }
-        $arrIBCLeague = $objIBCLeague->getInfoById($league_id);
-        $arrIBCLeague['ibc_league_id'] = $arrIBCLeague['league_id'];
-        unset($arrIBCLeague['league_id']);
-        // insert league
-        $objLeague = new League();
-        $arrLeague = $objLeague->getInfoByIbcId($league_id);
-        if ($arrLeague == null) {
-            $intLeague = $objLeague->create($arrIBCLeague);
-        } else {
-            $intLeague = $arrLeague['league_id'];
-        }
+		//Last minute checks
+		$priorityId = $priorityId ? $priorityId : $cfg->getDefaultPriorityId();	
+		
+		// insert data from ibc database to osticket database
+		$objIBCMatch = new IBC_Match();
+		$arrIBCMatch = $objIBCMatch->getInfoById($var['match']);
+		
+		// call IBC_LEAGUE class        
+		$objIBCLeague = new IBC_League();
+		if($var['league'] != 0 || $var['league'] != "") {
+			$league_id = $var['league'];
+		} else {
+			$league_id = $arrIBCMatch['league_id'];
+		}
+		$arrIBCLeague = $objIBCLeague->getInfoById($league_id);
+		$arrIBCLeague['ibc_league_id'] = $arrIBCLeague['league_id'];
+		unset($arrIBCLeague['league_id']);
+		// insert league
+		$objLeague = new League();
+		$arrLeague = $objLeague->getInfoByIbcId($league_id);
+		if ($arrLeague == null) {
+			$intLeague = $objLeague->create($arrIBCLeague);
+		} else {
+			$intLeague = $arrLeague['league_id'];
+		}
 
-        // call IBC_MATCH class       
-        $arrIBCMatch['duedate'] = $arrIBCMatch['event_date'];
-        $arrIBCMatch['kickofftime'] = $arrIBCMatch['kickofftime'];
-        $arrIBCMatch['ibc_match_id'] = $arrIBCMatch['match_id'];
-        $intIbcHomeId = $arrIBCMatch['home_id'];
-        $intIbcAwayId = $arrIBCMatch['away_id'];
-        unset($arrIBCMatch['event_date']);
-        unset($arrIBCMatch['league_id']);
-        unset($arrIBCMatch['home_id']);
-        unset($arrIBCMatch['away_id']);
-        
-        // call IBC_TEAM class
-        $objIbcTeam = new IBC_Team();
-        $arrIBCHomeTeam = $objIbcTeam->getInfoById($intIbcHomeId);
-        $arrIBCHomeTeam['ibc_team_id'] = $arrIBCHomeTeam['team_id'];
-        unset($arrIBCHomeTeam['team_id']);
-        // insert home team
-        $objTeam = new Team();
-        $arrHomeTeam = $objTeam->getInfoByIbcId($intIbcHomeId);
-        if ($arrHomeTeam == null) {
-            $intHomeId = $objTeam->create($arrIBCHomeTeam);
-        } else {
-            $intHomeId = $arrHomeTeam['team_id'];
-        }
-        // insert away team
-        $arrIBCAwayTeam = $objIbcTeam->getInfoById($intIbcAwayId);
-        $arrIBCAwayTeam['ibc_team_id'] = $arrIBCAwayTeam['team_id'];
-        unset($arrIBCHomeTeam['team_id']);
+		// call IBC_MATCH class       
+		$arrIBCMatch['duedate'] = $arrIBCMatch['event_date'];
+		$arrIBCMatch['kickofftime'] = $arrIBCMatch['kickofftime'];
+		$arrIBCMatch['ibc_match_id'] = $arrIBCMatch['match_id'];
+		$intIbcHomeId = $arrIBCMatch['home_id'];
+		$intIbcAwayId = $arrIBCMatch['away_id'];
+		unset($arrIBCMatch['event_date']);
+		unset($arrIBCMatch['league_id']);
+		unset($arrIBCMatch['home_id']);
+		unset($arrIBCMatch['away_id']);
+		
+		// call IBC_TEAM class
+		$objIbcTeam = new IBC_Team();
+		$arrIBCHomeTeam = $objIbcTeam->getInfoById($intIbcHomeId);
+		$arrIBCHomeTeam['ibc_team_id'] = $arrIBCHomeTeam['team_id'];
+		unset($arrIBCHomeTeam['team_id']);
+		// insert home team
+		$objTeam = new Team();
+		$arrHomeTeam = $objTeam->getInfoByIbcId($intIbcHomeId);
+		if ($arrHomeTeam == null) {
+			$intHomeId = $objTeam->create($arrIBCHomeTeam);
+		} else {
+			$intHomeId = $arrHomeTeam['team_id'];
+		}
+		// insert away team
+		$arrIBCAwayTeam = $objIbcTeam->getInfoById($intIbcAwayId);
+		$arrIBCAwayTeam['ibc_team_id'] = $arrIBCAwayTeam['team_id'];
+		unset($arrIBCHomeTeam['team_id']);
 
-        $arrAwayTeam = $objTeam->getInfoByIbcId($intIbcAwayId);
-        if ($arrAwayTeam == null) {
-            $intAwayId = $objTeam->create($arrIBCAwayTeam);
-        } else {
-            $intAwayId = $arrAwayTeam['team_id'];
-        }
-        $arrIBCMatch['league_id'] = $intLeague;
-        $arrIBCMatch['home_id'] = $intHomeId;
-        $arrIBCMatch['away_id'] = $intAwayId;
+		$arrAwayTeam = $objTeam->getInfoByIbcId($intIbcAwayId);
+		if ($arrAwayTeam == null) {
+			$intAwayId = $objTeam->create($arrIBCAwayTeam);
+		} else {
+			$intAwayId = $arrAwayTeam['team_id'];
+		}
+		$arrIBCMatch['league_id'] = $intLeague;
+		$arrIBCMatch['home_id'] = $intHomeId;
+		$arrIBCMatch['away_id'] = $intAwayId;
 
-        // insert match
-        $objMatch = new Match();
-        $arrMatch = $objMatch->getInfoByIbcId($var['match']);
-        if ($arrMatch == null) {
-            $intMatchId = $objMatch->create($arrIBCMatch);
-        } else {
-            $intMatchId = $arrMatch['match_id'];
-        }
+		// insert match
+		$objMatch = new Match();
+		$arrMatch = $objMatch->getInfoByIbcId($var['match']);
+		if ($arrMatch == null) {
+			$intMatchId = $objMatch->create($arrIBCMatch);
+		} else {
+			$intMatchId = $arrMatch['match_id'];
+		}		
+		
+		//We are ready son...hold on to the rails.
+		$extId = Ticket::genExtRandID();
+		$sql = 'INSERT INTO ' . TICKET_TABLE . ' SET `created`=NOW() ' .
+				',`ticketID`=' . db_input($extId) .
+				',`dept_id`=' . db_input(1) .
+				',`topic_id`=' . db_input($topicId) .
+				',`priority_id`=' . db_input($priorityId) .
+				',`email`=' . db_input($var['email']) .
+				',`name`=' . db_input(Format::striptags($var['name'])) .
+				',`subject`=' . db_input(Format::striptags($var['subject'])) .
+				',`sport_type`=' . db_input(Format::striptags($var['sport_type'])) .
+				',`league`=' . db_input(Format::striptags($intLeague)) .
+				',`match`=' . db_input(Format::striptags($intMatchId)) .
+				',`helptopic`=' . db_input(Format::striptags($topicDesc)) .
+				',`phone`="' . db_input($var['phone'], false) . '"' .
+				',`phone_ext`=' . db_input($var['phone_ext'] ? $var['phone_ext'] : '') .
+				',`ip_address`=' . db_input($ipaddress) .
+				',`source`=' . db_input($source);
+		if ($var['trader'] != '') {
+			$sql .= ',`trader`=' . db_input(Format::striptags($var['trader']));
+		}
 
+		if ($var['suspender'] != '') {
+			$sql .= ',`suspender`=' . db_input(Format::striptags($var['suspender']));
+		}
 
-        //We are ready son...hold on to the rails.
-        $extId = Ticket::genExtRandID();
-        // customized osticket
-        /*
-          $sql=   'INSERT INTO '.TICKET_TABLE.' SET created=NOW() '.
-          ',ticketID='.db_input($extId).
-          ',dept_id='.db_input($deptId).
-          ',topic_id='.db_input($topicId).
-          ',priority_id='.db_input($priorityId).
-          ',email='.db_input($var['email']).
-          ',name='.db_input(Format::striptags($var['name'])).
-          ',subject='.db_input(Format::striptags($var['subject'])).
-          ',helptopic='.db_input(Format::striptags($topicDesc)).
-          ',phone="'.db_input($var['phone'],false).'"'.
-          ',phone_ext='.db_input($var['phone_ext']?$var['phone_ext']:'').
-          ',ip_address='.db_input($ipaddress).
-          ',source='.db_input($source);
-         */
-        $sql = 'INSERT INTO ' . TICKET_TABLE . ' SET `created`=NOW() ' .
-                ',`ticketID`=' . db_input($extId) .
-                ',`dept_id`=' . db_input($deptId) .
-                ',`topic_id`=' . db_input($topicId) .
-                ',`priority_id`=' . db_input($priorityId) .
-                ',`email`=' . db_input($var['email']) .
-                ',`name`=' . db_input(Format::striptags($var['name'])) .
-                ',`subject`=' . db_input(Format::striptags($var['subject'])) .
-                ',`sport_type`=' . db_input(Format::striptags($var['sport_type'])) .
-                ',`league`=' . db_input(Format::striptags($intLeague)) .
-                ',`match`=' . db_input(Format::striptags($intMatchId)) .
-                ',`helptopic`=' . db_input(Format::striptags($topicDesc)) .
-                ',`phone`="' . db_input($var['phone'], false) . '"' .
-                ',`phone_ext`=' . db_input($var['phone_ext'] ? $var['phone_ext'] : '') .
-                ',`ip_address`=' . db_input($ipaddress) .
-                ',`source`=' . db_input($source);
-        if ($var['trader'] != '') {
-            $sql .= ',`trader`=' . db_input(Format::striptags($var['trader']));
-        }
+		if ($var['csd'] != '') {
+			$sql .= ',`csd`=' . db_input(Format::striptags($var['csd']));
+		}
 
-        if ($var['suspender'] != '') {
-            $sql .= ',`suspender`=' . db_input(Format::striptags($var['suspender']));
-        }
+		if ($var['provider'] != '') {
+			$sql .= ',`provider`=' . db_input(Format::striptags($var['provider']));
+		}
 
-        if ($var['csd'] != '') {
-            $sql .= ',`csd`=' . db_input(Format::striptags($var['csd']));
-        }
+		// end
+		//Make sure the origin is staff - avoid firebug hack!
+		if ($var['duedate'] && !strcasecmp($origin, 'staff'))
+			$sql.=',duedate=' . db_input(date('Y-m-d G:i', Misc::dbtime($var['duedate'] . ' ' . $var['time'])));
 
-        if ($var['provider'] != '') {
-            $sql .= ',`provider`=' . db_input(Format::striptags($var['provider']));
-        }
+		$ticket = null;
+		if (db_query($sql) && ($id = db_insert_id())) {				
+			if (!$cfg->useRandomIds()) {
+				//Sequential ticketIDs support really..really suck arse.
+				$extId = $id; //To make things really easy we are going to use autoincrement ticket_id.
+				db_query('UPDATE ' . TICKET_TABLE . ' SET ticketID=' . db_input($extId) . ' WHERE ticket_id=' . $id);
+				//TODO: RETHING what happens if this fails?? [At the moment on failure random ID is used...making stuff usable]
+			}
+			//Load newly created ticket.
+			$ticket = new Ticket($id);
+			//post the message.
+			$msgid = $ticket->postMessage($var['message'], $source, $var['mid'], $var['header'], true);
+			//TODO: recover from postMessage error??
+			//Upload attachments...web based.
+			if ($_FILES['attachment']['name'] && $cfg->allowOnlineAttachments() && $msgid) {
+				if (!$cfg->allowAttachmentsOnlogin() || ($cfg->allowAttachmentsOnlogin() && ($thisclient && $thisclient->isValid()))) {
+					$ticket->uploadAttachment($_FILES['attachment'], $msgid, 'M');
+					//TODO: recover from upload issues?
+				}
+			}			
+		
+			foreach ($deptIds as $deptId) {
+				db_query('INSERT INTO '.TICKET_DEPARTMENT_TABLE.' SET ticket_id='.db_input($id).',dept_id='.db_input($deptId));
+				
+				$dept = new Dept($deptId);
+				
+				if (!$dept || !($tplId = $dept->getTemplateId()))
+					$tplId = $cfg->getDefaultTemplateId();
+				
+				if ($autorespond && (Email::getIdByEmail($ticket->getEmail())))
+					$autorespond = false;
 
-        // end
-        //Make sure the origin is staff - avoid firebug hack!
-        if ($var['duedate'] && !strcasecmp($origin, 'staff'))
-            $sql.=',duedate=' . db_input(date('Y-m-d G:i', Misc::dbtime($var['duedate'] . ' ' . $var['time'])));
+				//SEND OUT NEW TICKET AUTORESP && ALERTS.
+				//New Ticket AutoResponse..
+				if ($autorespond && $cfg->autoRespONNewTicket() && $dept->autoRespONNewTicket()) {
+					$sql = 'SELECT ticket_autoresp_subj,ticket_autoresp_body FROM ' . EMAIL_TEMPLATE_TABLE .
+							' WHERE cfg_id=' . db_input($cfg->getId()) . ' AND tpl_id=' . db_input($tplId);
+					if (($resp = db_query($sql)) && db_num_rows($resp) && list($subj, $body) = db_fetch_row($resp)) {
+						$body = $ticket->replaceTemplateVars($body);
+						$subj = $ticket->replaceTemplateVars($subj);
+						$body = str_replace('%message', ($var['issue'] ? $var['issue'] : $var['message']), $body);
+						$body = str_replace('%signature', ($dept && $dept->isPublic()) ? $dept->getSignature() : '', $body);
 
-        //echo $sql;exit;
-        $ticket = null;
-        //return $ticket;		
-        //var_dump(db_query($sql));
+						if (!$dept || !($email = $dept->getAutoRespEmail()))
+							$email = $cfg->getDefaultEmail();
 
-        if (db_query($sql) && ($id = db_insert_id())) {
+						if ($email) {
+							//Reply separator tag.                        
+							if ($cfg->stripQuotedReply() && ($tag = $cfg->getReplySeparator()))
+								$body = "\n$tag\n\n" . $body;
+							$email->send($ticket->getEmail(), $subj, $body);
+						}
+					}else {
+						Sys::log(LOG_WARNING, 'Template Fetch Error', "Unable to fetch autoresponse template #$tplId");
+					}
+				}
 
-            if (!$cfg->useRandomIds()) {
-                //Sequential ticketIDs support really..really suck arse.
-                $extId = $id; //To make things really easy we are going to use autoincrement ticket_id.
-                db_query('UPDATE ' . TICKET_TABLE . ' SET ticketID=' . db_input($extId) . ' WHERE ticket_id=' . $id);
-                //TODO: RETHING what happens if this fails?? [At the moment on failure random ID is used...making stuff usable]
-            }
-            //Load newly created ticket.
-            $ticket = new Ticket($id);
-            //post the message.
-            $msgid = $ticket->postMessage($var['message'], $source, $var['mid'], $var['header'], true);
-            //TODO: recover from postMessage error??
-            //Upload attachments...web based.
-            if ($_FILES['attachment']['name'] && $cfg->allowOnlineAttachments() && $msgid) {
-                if (!$cfg->allowAttachmentsOnlogin() || ($cfg->allowAttachmentsOnlogin() && ($thisclient && $thisclient->isValid()))) {
-                    $ticket->uploadAttachment($_FILES['attachment'], $msgid, 'M');
-                    //TODO: recover from upload issues?
-                }
-            }
+				// insert attachment
+				$objAttachment = new Attachment();
+				$arrAttachment = explode(',', $var['attachment_name']);
+				foreach ($arrAttachment as $strAttachment) {
+					if ($strAttachment != '') {
+						$arrValue = array('attachment_name' => $strAttachment,
+							'ticket_id' => $id, 'type' => '0', 'response_id' => 0, 'note_id' => 0);
+						$objAttachment->create($arrValue, $errors);
+					}
+				}
+				// end insert attachment
+				//If enabled...send alert to staff (New Ticket Alert)
+				if ($alertstaff && $cfg->alertONNewTicket() && is_object($ticket)) {
+					$sql = 'SELECT ticket_alert_subj,ticket_alert_body FROM ' . EMAIL_TEMPLATE_TABLE .
+							' WHERE cfg_id=' . db_input($cfg->getId()) . ' AND tpl_id=' . db_input($tplId);
+					if (($resp = db_query($sql)) && db_num_rows($resp) && list($subj, $body) = db_fetch_row($resp)) {
 
-            $dept = $ticket->getDept();
+						$body = $ticket->replaceTemplateVars($body);
+						$subj = $ticket->replaceTemplateVars($subj);
+						$body = str_replace('%message', ($var['issue'] ? $var['issue'] : $var['message']), $body);
+						if (!($email = $cfg->getAlertEmail()))
+							$email = $cfg->getDefaultEmail();
 
-            if (!$dept || !($tplId = $dept->getTemplateId()))
-                $tplId = $cfg->getDefaultTemplateId();
-
-            //Overwrite auto responder if the FROM email is one of the internal emails...loop control.
-            if ($autorespond && (Email::getIdByEmail($ticket->getEmail())))
-                $autorespond = false;
-
-            //SEND OUT NEW TICKET AUTORESP && ALERTS.
-            //New Ticket AutoResponse..
-            if ($autorespond && $cfg->autoRespONNewTicket() && $dept->autoRespONNewTicket()) {
-
-
-                $sql = 'SELECT ticket_autoresp_subj,ticket_autoresp_body FROM ' . EMAIL_TEMPLATE_TABLE .
-                        ' WHERE cfg_id=' . db_input($cfg->getId()) . ' AND tpl_id=' . db_input($tplId);
-                if (($resp = db_query($sql)) && db_num_rows($resp) && list($subj, $body) = db_fetch_row($resp)) {
-                    $body = $ticket->replaceTemplateVars($body);
-                    $subj = $ticket->replaceTemplateVars($subj);
-                    $body = str_replace('%message', ($var['issue'] ? $var['issue'] : $var['message']), $body);
-                    $body = str_replace('%signature', ($dept && $dept->isPublic()) ? $dept->getSignature() : '', $body);
-
-                    if (!$dept || !($email = $dept->getAutoRespEmail()))
-                        $email = $cfg->getDefaultEmail();
-
-                    if ($email) {
-                        //Reply separator tag.                        
-                        if ($cfg->stripQuotedReply() && ($tag = $cfg->getReplySeparator()))
-                            $body = "\n$tag\n\n" . $body;
-                        $email->send($ticket->getEmail(), $subj, $body);
-                    }
-                }else {
-                    Sys::log(LOG_WARNING, 'Template Fetch Error', "Unable to fetch autoresponse template #$tplId");
-                }
-            }
-
-            // insert attachment
-            $objAttachment = new Attachment();
-            $arrAttachment = explode(',', $var['attachment_name']);
-            foreach ($arrAttachment as $strAttachment) {
-                if ($strAttachment != '') {
-                    $arrValue = array('attachment_name' => $strAttachment,
-                        'ticket_id' => $id, 'type' => '0', 'response_id' => 0, 'note_id' => 0);
-                    $objAttachment->create($arrValue, $errors);
-                }
-            }
-            // end insert attachment
-            //If enabled...send alert to staff (New Ticket Alert)
-            if ($alertstaff && $cfg->alertONNewTicket() && is_object($ticket)) {
-
-                $sql = 'SELECT ticket_alert_subj,ticket_alert_body FROM ' . EMAIL_TEMPLATE_TABLE .
-                        ' WHERE cfg_id=' . db_input($cfg->getId()) . ' AND tpl_id=' . db_input($tplId);
-                if (($resp = db_query($sql)) && db_num_rows($resp) && list($subj, $body) = db_fetch_row($resp)) {
-
-                    $body = $ticket->replaceTemplateVars($body);
-                    $subj = $ticket->replaceTemplateVars($subj);
-                    $body = str_replace('%message', ($var['issue'] ? $var['issue'] : $var['message']), $body);
-                    if (!($email = $cfg->getAlertEmail()))
-                        $email = $cfg->getDefaultEmail();
-
-                    if ($email && $email->getId()) {
-                        $sentlist = array();
-                        //Admin Alert.
-                        if ($cfg->alertAdminONNewTicket()) {
-                            $alert = str_replace("%staff", 'Admin', $body);
-                            $email->send($cfg->getAdminEmail(), $subj, $alert);
-                            $sentlist[] = $cfg->getAdminEmail();
-                        }
-                        //get the list
-                        $recipients = array();
-                        //Dept. Manager
-                        if ($cfg->alertDeptManagerONNewTicket()) {
-                            $recipients[] = $dept->getManager();
-                        }
-                        //Staff members
-                        if ($cfg->alertDeptMembersONNewTicket()) {
-                            $sql = 'SELECT staff_id FROM ' . STAFF_TABLE . ' WHERE onvacation=0 AND dept_id=' . db_input($dept->getId());
-                            if (($users = db_query($sql)) && db_num_rows($users)) {
-                                while (list($id) = db_fetch_row($users))
-                                    $recipients[] = new Staff($id);
-                            }
-                        }
-                        foreach ($recipients as $k => $staff) {
-                            if (!$staff || !is_object($staff) || !$staff->isAvailable())
-                                continue;
-                            if (in_array($staff->getEmail(), $sentlist))
-                                continue; //avoid duplicate emails.
-                            $alert = str_replace("%staff", $staff->getFirstName(), $body);
-                            $email->send($staff->getEmail(), $subj, $alert);
-                            $sentlist[] = $staff->getEmail();
-                        }
-                    }
-                }else {
-                    Sys::log(LOG_WARNING, 'Template Fetch Error', "Unable to fetch 'new ticket' alert template #$tplId");
-                }
-            }
-        }
+						if ($email && $email->getId()) {
+							$sentlist = array();
+							//Admin Alert.
+							if ($cfg->alertAdminONNewTicket()) {
+								$alert = str_replace("%staff", 'Admin', $body);
+								$email->send($cfg->getAdminEmail(), $subj, $alert);
+								$sentlist[] = $cfg->getAdminEmail();
+							}
+							//get the list
+							$recipients = array();
+							//Dept. Manager
+							if ($cfg->alertDeptManagerONNewTicket()) {
+								$recipients[] = $dept->getManager();
+							}
+							//Staff members
+							if ($cfg->alertDeptMembersONNewTicket()) {
+								$sql = 'SELECT staff_id FROM ' . STAFF_TABLE . ' WHERE onvacation=0 AND dept_id=' . db_input($dept->getId());
+								if (($users = db_query($sql)) && db_num_rows($users)) {
+									while (list($id) = db_fetch_row($users))
+										$recipients[] = new Staff($id);
+								}
+							}
+							foreach ($recipients as $k => $staff) {
+								if (!$staff || !is_object($staff) || !$staff->isAvailable())
+									continue;
+								if (in_array($staff->getEmail(), $sentlist))
+									continue; //avoid duplicate emails.
+								$alert = str_replace("%staff", $staff->getFirstName(), $body);
+								$email->send($staff->getEmail(), $subj, $alert);
+								$sentlist[] = $staff->getEmail();
+							}
+						}
+					}else {
+						Sys::log(LOG_WARNING, 'Template Fetch Error', "Unable to fetch 'new ticket' alert template #$tplId");
+					}
+				}			
+			}
+		}
 
         return $ticket;
     }
@@ -1855,52 +1796,56 @@ class Ticket {
                 $ticket->markUnAnswered();
                 //Send Notice to user --- if requested AND enabled!!
                 if ($cfg->notifyONNewStaffTicket() && isset($var['alertuser'])) {
-                    $dept = $ticket->getDept();
-                    if (!$dept || !($tplId = $dept->getTemplateId()))
-                        $tplId = $cfg->getDefaultTemplateId();
+					$deptIds = $var['deptIds'];
+					foreach ($deptIds as $deptId) {
+						$dept = new Dept($deptId);
+						
+						if (!$dept || !($tplId = $dept->getTemplateId()))
+							$tplId = $cfg->getDefaultTemplateId();
 
-                    $sql = 'SELECT ticket_notice_subj,ticket_notice_body FROM ' . EMAIL_TEMPLATE_TABLE .
-                            ' WHERE cfg_id=' . db_input($cfg->getId()) . ' AND tpl_id=' . db_input($tplId);
+						$sql = 'SELECT ticket_notice_subj,ticket_notice_body FROM ' . EMAIL_TEMPLATE_TABLE .
+								' WHERE cfg_id=' . db_input($cfg->getId()) . ' AND tpl_id=' . db_input($tplId);
 
-                    if (($resp = db_query($sql)) && db_num_rows($resp) && list($subj, $body) = db_fetch_row($resp)) {
-                        $body = $ticket->replaceTemplateVars($body);
-                        $subj = $ticket->replaceTemplateVars($subj);
-                        $body = str_replace('%message', $var['issue'], $body);
-                        //Figure out the signature to use...if any.
-                        switch (strtolower($var['signature'])):
-                            case 'mine';
-                                $signature = $thisuser->getSignature();
-                                break;
-                            case 'dept':
-                                $signature = ($dept && $dept->isPublic()) ? $dept->getSignature() : ''; //make sure it is public
-                                break;
-                            case 'none';
-                            default:
-                                $signature = '';
-                                break;
-                        endswitch;
-                        $body = str_replace("%signature", $signature, $body);
-                        //Email attachment when attached AND if emailed attachments are allowed!
-                        $file = null;
-                        $attachment = $_FILES['attachment'];
-                        if (($attachment && is_file($attachment['tmp_name'])) && $cfg->emailAttachments()) {
-                            $file = array('file' => $attachment['tmp_name'], 'name' => $attachment['name'], 'type' => $attachment['type']);
-                        }
+						if (($resp = db_query($sql)) && db_num_rows($resp) && list($subj, $body) = db_fetch_row($resp)) {
+							$body = $ticket->replaceTemplateVars($body);
+							$subj = $ticket->replaceTemplateVars($subj);
+							$body = str_replace('%message', $var['issue'], $body);
+							//Figure out the signature to use...if any.
+							switch (strtolower($var['signature'])):
+								case 'mine';
+									$signature = $thisuser->getSignature();
+									break;
+								case 'dept':
+									$signature = ($dept && $dept->isPublic()) ? $dept->getSignature() : ''; //make sure it is public
+									break;
+								case 'none';
+								default:
+									$signature = '';
+									break;
+							endswitch;
+							$body = str_replace("%signature", $signature, $body);
+							//Email attachment when attached AND if emailed attachments are allowed!
+							$file = null;
+							$attachment = $_FILES['attachment'];
+							if (($attachment && is_file($attachment['tmp_name'])) && $cfg->emailAttachments()) {
+								$file = array('file' => $attachment['tmp_name'], 'name' => $attachment['name'], 'type' => $attachment['type']);
+							}
 
-                        if ($cfg->stripQuotedReply() && ($tag = trim($cfg->getReplySeparator())))
-                            $body = "\n$tag\n\n" . $body;
+							if ($cfg->stripQuotedReply() && ($tag = trim($cfg->getReplySeparator())))
+								$body = "\n$tag\n\n" . $body;
 
-                        if (!$dept || !($email = $dept->getEmail()))
-                            $email = $cfg->getDefaultEmail();
+							if (!$dept || !($email = $dept->getEmail()))
+								$email = $cfg->getDefaultEmail();
 
-                        if ($email && $email->getId()) {
-                            $email->send($ticket->getEmail(), $subj, $body, $file);
-                        }
-                    } else {
-                        //We have a big problem...alert admin...
-                        $msg = 'Problems fetching response template for ticket#' . $ticket->getId() . ' Possible config error - template #' . $tplId;
-                        Sys::alertAdmin('System Error', $msg);
-                    }
+							if ($email && $email->getId()) {
+								$email->send($ticket->getEmail(), $subj, $body, $file);
+							}
+						} else {
+							//We have a big problem...alert admin...
+							$msg = 'Problems fetching response template for ticket#' . $ticket->getId() . ' Possible config error - template #' . $tplId;
+							Sys::alertAdmin('System Error', $msg);
+						}
+					}
                 } //Send send alert.
                 //Upload attachment if any...
                 if ($_FILES['attachment'] && $_FILES['attachment']['size']) {
@@ -1951,7 +1896,6 @@ class Ticket {
 
     // delete all attachments which have deleted ticket
     function deleteAttachmentByTicketId() {
-
         $sql = 'SELECT attachment_id,attachment_name FROM ' . ATTACHMENT_TABLE . ' WHERE ticket_id=' . db_input($this->getId());
         $res = db_query($sql);
         if ($res && db_num_rows($res)) {
@@ -1971,7 +1915,5 @@ class Ticket {
         }
         return FALSE;
     }
-
 }
-
 ?>

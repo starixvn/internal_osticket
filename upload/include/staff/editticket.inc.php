@@ -1,5 +1,6 @@
 <!-- attachment -->
 <link href="css/fineuploader.css" rel="stylesheet">
+<link href="css/chosen.css" rel="stylesheet">
 
 <script src="js/header.js"></script>
 <script src="js/util.js"></script>
@@ -11,28 +12,27 @@
 <script src="js/dnd.js"></script>
 <script src="js/uploader.js"></script>
 <script type="text/javascript" src="js/jquery.validate.js" charset="utf-8"></script>
+<script type="text/javascript" src="js/chosen.jquery.js" charset="utf-8"></script>
+<script type="text/javascript">
+	$(function(){
+		$(".chosen-select").chosen();
+	});
+</script>
 <?php
 if(!defined('OSTSCPINC') || !is_object($ticket) || !is_object($thisuser) || !$thisuser->isStaff()) die('Access Denied');
 
-if(!($thisuser->canEditTickets() || ($thisuser->isManager() && $ticket->getDeptId()==$thisuser->getDeptId()))) die('Access Denied. Perm error.');
+$deptIds = array();
+foreach($ticket->getDepts() as $dept) {
+	array_push($deptIds, $dept->getId());
+}
+
+if(!($thisuser->canEditTickets() || ($thisuser->isManager() && in_array($thisuser->getDeptId(), $deptIds) == true))) 
+	die('Access Denied. Perm error.');
 
 if($_POST && $errors){
     $info=Format::input($_POST);
 }else{
     // customized osticket
-    /*
-    $info=array('email'=>$ticket->getEmail(),
-                'name' =>$ticket->getName(),
-                'phone'=>$ticket->getPhone(),
-                'phone_ext'=>$ticket->getPhoneExt(),
-                'pri'=>$ticket->getPriorityId(),
-                'topicId'=>$ticket->getTopicId(),
-                'topic'=>$ticket->getHelpTopic(),
-                'subject' =>$ticket->getSubject(),
-                'duedate' =>$ticket->getDueDate()?(Format::userdate('m/d/Y',Misc::db2gmtime($ticket->getDueDate()))):'',
-                'time'=>$ticket->getDueDate()?(Format::userdate('G:i',Misc::db2gmtime($ticket->getDueDate()))):'',
-                );    
-     */
     $info=array('email'=>$ticket->getEmail(),
                 'name' =>$ticket->getName(),
                 'phone'=>$ticket->getPhone(),
@@ -50,8 +50,7 @@ if($_POST && $errors){
                 'provider' =>$ticket->getProvider(),
                 'duedate' =>$ticket->getDueDate()?(Format::userdate('m/d/Y',Misc::db2gmtime($ticket->getDueDate()))):'',
                 'time'=>$ticket->getDueDate()?(Format::userdate('G:i',Misc::db2gmtime($ticket->getDueDate()))):'',
-                );
-    
+                );    
     // end
     /*Note: Please don't make me explain how dates work - it is torture. Trust me! */
 }
@@ -70,9 +69,12 @@ if($_POST && $errors){
     <input type='hidden' name='id' value='<?=$ticket->getId()?>'>
     <input type='hidden' name='a' value='update'>
     <table width="100%" border="0" cellspacing=1 cellpadding=2 class="front_layer">
-        <tr><td align="left" colspan=2 class="msg">
-            Update Ticket #<?=$ticket->getExtId()?>&nbsp;&nbsp;(<a href="tickets.php?id=<?=$ticket->getId()?>" style="color:black;">View Ticket</a>)<br></td></tr>
-
+        <tr>
+			<td align="left" colspan=2 class="msg">
+				Update Ticket #<?=$ticket->getExtId()?>&nbsp;&nbsp;(<a href="tickets.php?id=<?=$ticket->getId()?>" style="color:black;">View Ticket</a>)
+				<br>
+			</td>
+		</tr>
         <tr>
             <td align="left" class="sync_data"><b>Full Name:</b></td>
             <td>
@@ -87,6 +89,22 @@ if($_POST && $errors){
                 &nbsp;<label class="error"><?=$errors['email']?></label>
             </td>
         </tr>
+		<tr>
+			<td align="left"><b>Department:</b></td>
+			<td class="ticket_department">
+				<select name="deptIds[]" class="chosen-select required" id="deptId" multiple="multiple">
+					<?					
+					$services = db_query('SELECT dept_id,dept_name FROM ' . DEPT_TABLE . ' ORDER BY dept_name');
+					while (list($deptId, $deptName) = db_fetch_row($services)) {
+						$selected = (in_array($deptId, $deptIds) == true) ? 'selected' : '';
+						?>
+						<option value="<?= $deptId ?>"<?= $selected ?>><?= $deptName ?></option>
+						<? }
+					?>
+				</select>
+				&nbsp;<label class="error"><b>*</b>&nbsp;<?= $errors['deptId'] ?></label>
+			</td>
+		</tr>
         <tr>
             <td align="left"><b>Subject:</b></td>
             <td>

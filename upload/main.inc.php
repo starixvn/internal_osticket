@@ -134,6 +134,7 @@
     define('TICKET_ATTACHMENT_TABLE',TABLE_PREFIX.'ticket_attachment');
     define('TICKET_PRIORITY_TABLE',TABLE_PREFIX.'ticket_priority');
     define('TICKET_LOCK_TABLE',TABLE_PREFIX.'ticket_lock');
+	define('TICKET_DEPARTMENT_TABLE',TABLE_PREFIX.'ticket_department');
   
     define('EMAIL_TABLE',TABLE_PREFIX.'email');
     define('EMAIL_TEMPLATE_TABLE',TABLE_PREFIX.'email_template');

@@ -47,13 +47,11 @@ $info=($errors && $_POST)?Format::input($_POST):Format::htmlchars($info);
             <td class="department_email">
                 <select name="emailIds[]" class="chosen-select" multiple="multiple">
                     <?
-                    $emails=db_query('SELECT email_id,email,name,smtp_active FROM '.EMAIL_TABLE);
-                    while (list($id,$email,$name,$smtp) = db_fetch_row($emails)){
-                        $email=$name?"$name &lt;$email&gt;":$email;
-                        if($smtp)
-                            $email.=' (SMTP)';
+                    $emails=db_query('SELECT email_id,email FROM '.EMAIL_TABLE.' ORDER BY email');
+                    while (list($id,$email) = db_fetch_row($emails)){						
+						$selected = (in_array($id, $emailIds) == true) ? 'selected' : '';
 						?>
-						<option value="<?=$id?>"<?=(in_array($id, $emailIds) == true)?'selected':''?>><?=$email?></option>
+						<option value="<?=$id?>"<?=$selected?>><?=$email?></option>
                     <?
                     }?>
                  </select>

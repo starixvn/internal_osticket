@@ -1,6 +1,7 @@
 
 <!-- attachment -->
 <link href="css/fineuploader.css" rel="stylesheet">
+<link href="css/chosen.css" rel="stylesheet">
 <script src="js/header.js"></script>
 <script src="js/util.js"></script>
 <script src="js/button.js"></script>
@@ -11,6 +12,12 @@
 <script src="js/dnd.js"></script>
 <script src="js/uploader.js"></script>
 <script type="text/javascript" src="js/jquery.validate.js" charset="utf-8"></script>
+<script type="text/javascript" src="js/chosen.jquery.js" charset="utf-8"></script>
+<script type="text/javascript">
+	$(function(){
+		$(".chosen-select").chosen();
+	});
+</script>
 
 <?php
 if (!defined('OSTSCPINC') || !is_object($thisuser) || !$thisuser->isStaff())
@@ -44,10 +51,10 @@ $info = ($_POST && $errors) ? Format::input($_POST) : array(); //on error...use 
         <td>
             <input type="text" id="email" name="email" size="25" maxlength="120" value="<?= $info['email'] ?>">
             &nbsp;<label class="error"><?= $errors['email'] ?></label>
-<? if ($cfg->notifyONNewStaffTicket()) { ?>
+			<? if ($cfg->notifyONNewStaffTicket()) { ?>
                 &nbsp;&nbsp;&nbsp;
                 <input type="checkbox" name="alertuser" <?= (!$errors || $info['alertuser']) ? 'checked' : '' ?>>Send alert to user.
-<? } ?>
+			<? } ?>
         </td>
     </tr>
     <tr>
@@ -71,17 +78,15 @@ $info = ($_POST && $errors) ? Format::input($_POST) : array(); //on error...use 
     </tr>
     <tr>
         <td align="left"><b>Department:</b></td>
-        <td>
-            <select name="deptId" class="select_choose required" id="deptId">
-                <option value="" selected >Select Department</option>
+        <td class="ticket_department">
+            <select name="deptIds[]" class="chosen-select required" id="deptId" multiple="multiple">
                 <?
                 $services = db_query('SELECT dept_id,dept_name FROM ' . DEPT_TABLE . ' ORDER BY dept_name');
                 while (list($deptId, $dept) = db_fetch_row($services)) {
-                    $selected = ($info['deptId'] == $deptId) ? 'selected' : '';
                     ?>
                     <option value="<?= $deptId ?>"<?= $selected ?>><?= $dept ?></option>
-<? }
-?>
+					<? }
+				?>
             </select>
             &nbsp;<label class="error"><b>*</b>&nbsp;<?= $errors['deptId'] ?></label>
         </td>

@@ -13,7 +13,18 @@
 <?php
 //Note that ticket is initiated in tickets.php.
 if(!defined('OSTSCPINC') || !@$thisuser->isStaff() || !is_object($ticket) ) die('Invalid path');
-if(!$ticket->getId() or (!$thisuser->canAccessDept($ticket->getDeptId()) and $thisuser->getId()!=$ticket->getStaffId())) die('Access Denied');
+
+$depts  = $ticket->getDepts();  //Depts
+$deptIds = array();
+foreach($depts as $dept) {
+	array_push($deptIds, $dept->getId());
+}
+
+if(!$ticket->getId()
+	or (!in_array($deptIds, $ticket->getDeptId())
+		and !$thisuser->canAccessDept($ticket->getDeptId()) 
+		and $thisuser->getId()!=$ticket->getStaffId())) 
+	die('Access Denied');
 
 $info=($_POST && $errors)?Format::input($_POST):array(); //Re-use the post info on error...savekeyboards.org
 
@@ -21,8 +32,7 @@ $info=($_POST && $errors)?Format::input($_POST):array(); //Re-use the post info 
 if($cfg->getLockTime() && !$ticket->acquireLock())
     $warn.='Unable to obtain a lock on the ticket';
 
-//We are ready baby...lets roll. Akon rocks! 
-$dept  = $ticket->getDept();  //Dept
+//We are ready baby...lets roll. Akon rocks!
 $staff = $ticket->getStaff(); //Assiged staff.
 $lock  = $ticket->getLock();  //Ticket lock obj
 $id=$ticket->getId(); //Ticket ID.
@@ -35,15 +45,14 @@ if(!$errors['err'] && ($emailBanned=BanList::isbanned($ticket->getEmail())))
     $errors['err']='Email is in banlist! Must be removed before any reply/response';    
 if($ticket->isOverdue())
     $warn.='&nbsp;&nbsp;<span class="Icon overdueTicket">Marked overdue!</span>';
-    
 ?>
-<table width="100%" cellpadding="2" cellspacing="0" border="0">
+<table width="100%" cellpadding="2" cellspacing="0" border="0" class="table-view-ticket">
     <tr>
         <td class="msg" width=50%>
             Ticket #<?=$ticket->getExtId()?>&nbsp;<a href="tickets.php?id=<?=$id?>" title="Reload"><span class="Icon refresh">&nbsp;</span></a></td>
 
         <td class="msg" width=50%>
-            <? if($thisuser->canEditTickets() || ($thisuser->isManager() && $dept->getId()==$thisuser->getDeptId())) { ?>
+            <? if($thisuser->canEditTickets() || ($thisuser->isManager() && in_array($thisuser->getDeptId(), $deptIds) == true)) { ?>
              <a href="tickets.php?id=<?=$id?>&a=edit" title="Edit Ticket" class="Icon editTicket">Edit Ticket</a>
             <?}?>
         </td>
@@ -61,7 +70,16 @@ if($ticket->isOverdue())
    	 		</tr>
             <tr>
                 <th>Department:</th>
-                <td><?=Format::htmlchars($ticket->getDeptName())?></td>
+                <td>
+					<ul>
+					<?
+					foreach($depts as $dept) {
+					?>
+						<li><?=$dept->getName()?></li>
+					<?}
+					?>
+					</ul>
+				</td>
             </tr>
             <tr>
                 <th>Create Date:</th>
