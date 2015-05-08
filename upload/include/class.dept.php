@@ -21,8 +21,7 @@ class Dept {
     
     var $tplId;
 	
-    var $emailId;
-    var $email;
+    var $emails;
 
     var $autorespEmail;
     
@@ -37,11 +36,12 @@ class Dept {
             $this->row=$info;
             $this->id=$info['dept_id'];
             $this->tplId=$info['tpl_id'];
-            $this->emailId=$info['email_id'];
             $this->managerId=$info['manager_id'];
             $this->deptname=$info['dept_name'];
             $this->signature=$info['dept_signature'];
-            $this->getEmail(); //Auto load email struct.
+			
+			$this->emails=array();
+            $this->getEmails(); //Auto load email struct.
         }
     }
 
@@ -52,10 +52,6 @@ class Dept {
     function getName(){
         return $this->deptname;
     }
-        
-    function getEmailId(){
-        return $this->emailId;
-    }
 
     function getEmail(){        
         if(!$this->email && $this->emailId)
@@ -65,10 +61,8 @@ class Dept {
     }
 	
 	// get email list by dept_id
-    function getEmailIdsByDeptId()
-    {
-		$emailIds=array();
-		
+    function getEmails()
+    {		
 		if ($this->id){
 			$sql='SELECT DISTINCT email.email_id FROM '.DEPT_TABLE.' dept '.
 				' INNER JOIN '.DEPT_EMAIL_TABLE.' deptEmail ON dept.dept_id = deptEmail.dept_id '.
@@ -77,12 +71,12 @@ class Dept {
 			     
 			if(($res=db_query($sql)) && db_num_rows($res)) {
 				while ($row = db_fetch_array($res)) {
-					$emailIds[] = $row['email_id'];
+					array_push($this->emails, new Email($row['email_id']));
 				}
 			}
 		}
 		
-		return $emailIds;
+		return $this->emails;
     }
 
     function getTemplateId() {
@@ -115,8 +109,7 @@ class Dept {
         return $this->managerId;
     }
 
-    function getManager(){
-     
+    function getManager(){     
         if(!$this->manager && $this->managerId)
             $this->manager= new Staff($this->managerId);
         

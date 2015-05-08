@@ -203,7 +203,6 @@ class Email {
         //No SMTP or it failed....use php's native mail function.
         $mail = mail::factory('mail');
         return PEAR::isError($mail->send($to, $headers, $body))?false:true;
-
     }
 
     //sends emails using native php mail function Email::sendmail( ......);

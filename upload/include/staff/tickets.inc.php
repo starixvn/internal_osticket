@@ -100,14 +100,12 @@ if($staffId && ($staffId==$thisuser->getId())) { //Staff's assigned tickets.
     $qwhere.=' AND isanswered=1 ';
 }elseif(!$search && !$cfg->showAnsweredTickets() && !strcasecmp($status,'open')) {
     $qwhere.=' AND isanswered=0 ';
-}
- 
+} 
 
 //Show assigned?? Admin can not be limited. Dept managers see all tickets within the dept.
 if(!$cfg->showAssignedTickets() && !$thisuser->isadmin()) {
     $qwhere.=' AND (ticket.staff_id=0 OR ticket.staff_id='.db_input($thisuser->getId()).' OR dept.manager_id='.db_input($thisuser->getId()).') ';
 }
-
 
 //Search?? Somebody...get me some coffee 
 $deep_search=false;
@@ -572,7 +570,6 @@ $basic_display=!isset($_REQUEST['advance_search'])?true:false;
  </form>
 </div>
 <script type="text/javascript">
-
     var options = {
         script:"ajax.php?api=tickets&f=search&limit=10&",
         varname:"input",
@@ -597,29 +594,32 @@ $basic_display=!isset($_REQUEST['advance_search'])?true:false;
     <input type="hidden" name="a" value="mass_process" >
     <input type="hidden" name="status" value="<?=$statusss?>" >
     <tr><td>
-       <table width="100%" border="0" cellspacing=0 cellpadding=2 class="dtable" align="center">
+       <table width="100%" border="0" cellspacing=0 cellpadding=2 class="dtable table-list-ticket" align="center">
         <tr>
             <?if($canDelete || $canClose) {?>
 	        <th width="8px">&nbsp;</th>
             <?}?>
 	        <th width="70" >
-                <a href="tickets.php?sort=ID&order=<?=$negorder?><?=$qstr?>" title="Sort By Ticket ID <?=$negorder?>">Ticket</a></th>
+                <a href="tickets.php?sort=ID&order=<?=$negorder?><?=$qstr?>" title="Sort By Ticket ID <?=$negorder?>">Ticket</a>
+			</th>
 	        <th width="70">
-                <a href="tickets.php?sort=date&order=<?=$negorder?><?=$qstr?>" title="Sort By Date <?=$negorder?>">Date</a></th>
+                <a href="tickets.php?sort=date&order=<?=$negorder?><?=$qstr?>" title="Sort By Date <?=$negorder?>">Date</a>
+			</th>
 	        <th width="280">Subject</th>  
 	        <th width="120">
-                <a href="tickets.php?sort=dept&order=<?=$negorder?><?=$qstr?>" title="Sort By Category <?=$negorder?>">Department</a></th>
+                <a href="tickets.php?sort=dept&order=<?=$negorder?><?=$qstr?>" title="Sort By Category <?=$negorder?>">Department</a>
+			</th>
 	        <th width="70">
-                <a href="tickets.php?sort=pri&order=<?=$negorder?><?=$qstr?>" title="Sort By Priority <?=$negorder?>">Priority</a></th>
-                <th width="180" >From</th>
-                <th width="180" >Assign To</th>
+                <a href="tickets.php?sort=pri&order=<?=$negorder?><?=$qstr?>" title="Sort By Priority <?=$negorder?>">Priority</a>
+			</th>
+			<th width="180" >From</th>
+			<th width="180" >Assign To</th>
         </tr>
         <?
         $class = "row1";
         $total=0;
         if($tickets_res && ($num=db_num_rows($tickets_res))):
-            while ($row = db_fetch_array($tickets_res)) {
-           
+            while ($row = db_fetch_array($tickets_res)) {           
                 $tag=$row['staff_id']?'assigned':'openticket';
                 $flag=null;
                 if($row['lock_id'])
@@ -635,6 +635,9 @@ $basic_display=!isset($_REQUEST['advance_search'])?true:false;
                     $tid=sprintf('<b>%s</b>',$tid);
                     //$subject=sprintf('<b>%s</b>',Format::truncate($row['subject'],40)); // Making the subject bold is too much for the eye
                 }
+				
+				// list department each of ticket
+				$ticket = new Ticket($row['ticket_id']);				
                 ?>
             <tr class="<?=$class?> " id="<?=$row['ticket_id']?>">
                 <?if($canDelete || $canClose) {?>
@@ -650,7 +653,16 @@ $basic_display=!isset($_REQUEST['advance_search'])?true:false;
                     href="tickets.php?id=<?=$row['ticket_id']?>"><?=$subject?></a>
                     &nbsp;<?=$row['attachments']?"<span class='Icon file'>&nbsp;</span>":''?></td>                
                 
-                <td nowrap><?=Format::truncate($row['dept_name'],30)?></td>
+                <td nowrap>
+					<ul class="list-department">
+					<?
+					foreach($ticket->depts as $dept) {
+					?>
+						<li><?=Format::truncate($dept->getName(),30)?></li>
+					<?}
+					?>
+					</ul>
+				</td>
                 <td class="nohover" align="center" style="background-color:<?=$row['priority_color']?>;"><?=$row['priority_desc']?></td>
                 <td nowrap><?=Format::truncate($row['name'],22,strpos($row['name'],'@'))?>&nbsp;</td>
                 <td nowrap align="center"><?=$row['staff_name']?></td>

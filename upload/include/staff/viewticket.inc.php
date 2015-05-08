@@ -14,15 +14,19 @@
 //Note that ticket is initiated in tickets.php.
 if(!defined('OSTSCPINC') || !@$thisuser->isStaff() || !is_object($ticket) ) die('Invalid path');
 
-$depts  = $ticket->getDepts();  //Depts
 $deptIds = array();
-foreach($depts as $dept) {
-	array_push($deptIds, $dept->getId());
+$isCanAccessDept = false;
+
+foreach($ticket->depts as $dept) {
+	array_push($deptIds, $dept->getId());	
+	
+	if($thisuser->canAccessDept($dept->getId()))
+		$isCanAccessDept = true;
 }
 
 if(!$ticket->getId()
-	or (!in_array($deptIds, $ticket->getDeptId())
-		and !$thisuser->canAccessDept($ticket->getDeptId()) 
+	or (!in_array($thisuser->getDept()->getId(), $deptIds)
+		and !$isCanAccessDept 
 		and $thisuser->getId()!=$ticket->getStaffId())) 
 	die('Access Denied');
 
@@ -35,7 +39,7 @@ if($cfg->getLockTime() && !$ticket->acquireLock())
 //We are ready baby...lets roll. Akon rocks!
 $staff = $ticket->getStaff(); //Assiged staff.
 $lock  = $ticket->getLock();  //Ticket lock obj
-$id=$ticket->getId(); //Ticket ID.
+$id = $ticket->getId(); //Ticket ID.
 
 if($staff)
     $warn.='&nbsp;&nbsp;<span class="Icon assignedTicket">Ticket is assigned to '.$staff->getName().'</span>';
@@ -73,7 +77,7 @@ if($ticket->isOverdue())
                 <td>
 					<ul>
 					<?
-					foreach($depts as $dept) {
+					foreach($ticket->depts as $dept) {
 					?>
 						<li><?=$dept->getName()?></li>
 					<?}

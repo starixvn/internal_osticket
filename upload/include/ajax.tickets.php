@@ -21,8 +21,7 @@ include_once(INCLUDE_DIR.'class.ticket.php');
 
 class TicketsAjaxAPI{
    
-    function searchbyemail($params) {
-	
+    function searchbyemail($params) {	
         $input = db_input(strtolower($params['input']),false);
         $len = strlen($input);
         $limit = isset($params['limit']) ? (int) $params['limit']:25;
@@ -40,7 +39,6 @@ class TicketsAjaxAPI{
     }
 
     function search($params) {
-
         $input = db_input(strtolower($params['input']),false);
         $len = strlen($input);
         $limit = isset($params['limit']) ? (int) $params['limit']:25;
@@ -72,8 +70,14 @@ class TicketsAjaxAPI{
             return 0;
        
         $ticket = new Ticket($params['tid']);
+		$isCanAccessDept = false;
+
+		foreach($ticket->depts as $dept) {
+			if($thisuser->canAccessDept($dept->getId()))
+				$isCanAccessDept = true;
+		}
         
-        if(!$ticket || (!$thisuser->canAccessDept($ticket->getDeptId()) && ($ticket->isAssigned() && $thisuser->getId()!=$ticket->getStaffId())))
+        if(!$ticket || (!$isCanAccessDept && ($ticket->isAssigned() && $thisuser->getId()!=$ticket->getStaffId())))
              return '{"id":0, "retry":false}';
         
         //is the ticket already locked?

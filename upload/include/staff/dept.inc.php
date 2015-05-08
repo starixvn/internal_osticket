@@ -15,7 +15,11 @@ if($dept && $_REQUEST['a']!='new'){
     $title='Update Department';
     $action='update';
     $info=$dept->getInfo();
-	$emailIds=$dept->getEmailIdsByDeptId();
+	
+	$emailIds = array();
+	foreach($dept->emails as $email) {
+		array_push($emailIds, $email->getId());
+	}
 }else {
     $title='New Department';
     $action='create';
@@ -38,8 +42,7 @@ $info=($errors && $_POST)?Format::input($_POST):Format::htmlchars($info);
         <tr class="subheader"><td colspan=2 ><i>Dept depends on email &amp; help topics settings for incoming tickets.</i></td></tr>
         <tr><th>Dept Name:</th>
             <td><input type="text" name="dept_name" size=25 maxlength="32" value="<?=$info['dept_name']?>">
-                &nbsp;<font class="error">*&nbsp;<?=$errors['dept_name']?></font>
-                    
+                &nbsp;<font class="error">*&nbsp;<?=$errors['dept_name']?></font>                    
             </td>
         </tr>
         <tr>

@@ -34,16 +34,28 @@ $ticket=null; //clean start.
 if(!$errors && ($id=$_REQUEST['id']?$_REQUEST['id']:$_POST['ticket_id']) && is_numeric($id)) {
     $deptID=0;
     $ticket= new Ticket($id);
-    if(!$ticket or !$ticket->getDeptId())
+	$isCanAccessDept = false;
+	$deptIds = array();
+	foreach($ticket->depts as $dept) {
+		array_push($deptIds, $dept->getId());
+		
+		if($thisuser->canAccessDept($dept->getId()))
+			$isCanAccessDept = true;
+	}
+	
+    if(!$ticket or !$ticket->depts or !deptIds) {
         $errors['err']='Unknown ticket ID#'.$id; //Sucker...invalid id
-    elseif(!$thisuser->isAdmin()  && (!$thisuser->canAccessDept($ticket->getDeptId()) && $thisuser->getId()!=$ticket->getStaffId()))
+	}
+    elseif(!$thisuser->isAdmin()  
+		&& (!$deptIds && !$isCanAccessDept 
+		&& $thisuser->getId()!=$ticket->getStaffId())) {
         $errors['err']='Access denied. Contact admin if you believe this is in error';
-
-    if(!$errors && $ticket->getId()==$id)
+	}
+    if(!$errors && $ticket->getId()==$id) {
         $page='viewticket.inc.php'; //Default - view
- 
+	}
     if(!$errors && $_REQUEST['a']=='edit') { //If it's an edit  check permission.
-        if($thisuser->canEditTickets() || ($thisuser->isManager() && $ticket->getDeptId()==$thisuser->getDeptId()))
+        if($thisuser->canEditTickets() || ($thisuser->isManager() && $deptIds))
             $page='editticket.inc.php';
         else
             $errors['err']='Access denied. You are not allowed to edit this ticket. Contact admin if you believe this is in error';
@@ -60,6 +72,16 @@ if($_POST && !$errors):
         //More tea please.
         $errors=array();
         $lock=$ticket->getLock(); //Ticket lock if any
+		
+		$isCanAccessDept = false;
+		$deptIds = array();
+		foreach($ticket->depts as $dept) {
+			array_push($deptIds, $dept->getId());
+			
+			if($thisuser->canAccessDept($dept->getId()))
+				$isCanAccessDept = true;
+		}
+		
         $statusKeys=array('open'=>'Open','Reopen'=>'Open','Close'=>'Closed');
         switch(strtolower($_POST['a'])):
         case 'reply':
@@ -118,7 +140,7 @@ if($_POST && !$errors):
             }
             break;
         case 'transfer':
-            $fields=array();
+            /*$fields=array();
             $fields['dept_id']      = array('type'=>'int',  'required'=>1, 'error'=>'Select Department');
             $fields['message']      = array('type'=>'text',  'required'=>1, 'error'=>'Note/Message required');
             $params = new Validator($fields);
@@ -126,7 +148,7 @@ if($_POST && !$errors):
                 $errors=array_merge($errors,$params->errors());
             }
 
-            if(!$errors && ($_POST['dept_id']==$ticket->getDeptId()))
+            if(!$errors && (in_array($_POST['dept_id'], $deptIds)))
                 $errors['dept_id']='Ticket already in the Dept.';
        
             if(!$errors && !$thisuser->canTransferTickets())
@@ -146,10 +168,10 @@ if($_POST && !$errors):
                 }
             }elseif(!$errors['err']){
                 $errors['err']='Unable to complete the transfer';
-            }
+            }*/
             break;
         case 'assign':
-            $fields=array();
+            /*$fields=array();
             $fields['staffId']          = array('type'=>'int',  'required'=>1, 'error'=>'Select assignee');
             $fields['assign_message']   = array('type'=>'text',  'required'=>1, 'error'=>'Message required');
             $params = new Validator($fields);
@@ -178,10 +200,10 @@ if($_POST && !$errors):
                 $ticket=null;
             }elseif(!$errors['err']) {
                 $errors['err']='Unable to assign the ticket';
-            }
+            }*/
             break; 
         case 'postnote':
-            $fields=array();
+            /*$fields=array();
             $fields['title']    = array('type'=>'string',   'required'=>1, 'error'=>'Title required');
             $fields['note']     = array('type'=>'string',   'required'=>1, 'error'=>'Note message required');
             $params = new Validator($fields);
@@ -211,7 +233,7 @@ if($_POST && !$errors):
                 }
             }elseif(!$errors['err']) {
                 $errors['err']='Error(s) occured. Unable to post the note.';
-            }
+            }*/
             break;
         case 'update':
             $page='editticket.inc.php';
@@ -225,7 +247,7 @@ if($_POST && !$errors):
             }
             break;
         case 'process':
-            $isdeptmanager=($ticket->getDeptId()==$thisuser->getDeptId())?true:false;
+            $isdeptmanager=(in_array($thisuser->getDeptId(), $deptIds))?true:false;
             switch(strtolower($_POST['do'])):
                 case 'change_priority':
                     if(!$thisuser->canManageTickets() && !$thisuser->isManager()){
@@ -418,7 +440,7 @@ if($_POST && !$errors):
                 if(($ticket=Ticket::create_by_staff($_POST,$errors))) {
                     $ticket->reload();
                     $msg='Ticket created successfully';
-                    if($thisuser->canAccessDept($ticket->getDeptId()) || $ticket->getStaffId()==$thisuser->getId()) {
+                    if($isCanAccessDept || $ticket->getStaffId()==$thisuser->getId()) {
                         //View the sucker
                         $page='viewticket.inc.php';
                     }else {

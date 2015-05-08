@@ -609,6 +609,7 @@ table.front_layer input[type="text"].date {
 .table-manage-department ul.list-email {
 	font-size: 12px;
 	margin: 0;
+	padding: 0 20px;
 }
 
 .table-manage-department ul.list-email li {
@@ -616,8 +617,14 @@ table.front_layer input[type="text"].date {
 }
 
 /* custom in ticket */
+.table-list-ticket tr td ul.list-department {
+	margin: 0;
+	padding: 0 20px;
+	font-size: 12px;
+}
+
 .table-view-ticket tr td ul{
-	margin: 0 0;
+	margin: 0;
 	padding: 0 20px;
 	font-size: 12px;
 }

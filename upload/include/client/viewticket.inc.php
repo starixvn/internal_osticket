@@ -5,9 +5,16 @@ if(strcasecmp($thisclient->getEmail(),$ticket->getEmail())) die('Access Denied')
 
 $info=($_POST && $errors)?Format::input($_POST):array(); //Re-use the post info on error...savekeyboards.org
 
-$dept = $ticket->getDept();
 //Making sure we don't leak out internal dept names
-$dept=($dept && $dept->isPublic())?$dept:$cfg->getDefaultDept();
+$depts = array();
+foreach($ticket->depts as $dept) {
+	if($dept->isPublic()) {
+		array_push($depts, $dept);
+	}
+}
+
+if(!$depts)
+	array_push($depts, $cfg->getDefaultDept());
 //We roll like that...
 ?>
 <table width="100%" cellpadding="1" cellspacing="0" border="0">
@@ -22,7 +29,16 @@ $dept=($dept && $dept->isPublic())?$dept:$cfg->getDefaultDept();
 			</tr>
             <tr>
                 <th>Department:</th>
-                <td><?=Format::htmlchars($dept->getName())?></td>
+                <td>
+					<ul>
+					<?
+					foreach($depts as $dept) {
+					?>
+						<li><?=$dept->getName()?></li>
+					<?}
+					?>
+					</ul>
+				</td>
             </tr>
 			<tr>
                 <th>Create Date:</th>

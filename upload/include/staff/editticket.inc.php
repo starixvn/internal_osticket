@@ -22,7 +22,7 @@
 if(!defined('OSTSCPINC') || !is_object($ticket) || !is_object($thisuser) || !$thisuser->isStaff()) die('Access Denied');
 
 $deptIds = array();
-foreach($ticket->getDepts() as $dept) {
+foreach($ticket->depts as $dept) {
 	array_push($deptIds, $dept->getId());
 }
 
