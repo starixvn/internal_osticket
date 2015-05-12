@@ -86,8 +86,8 @@ class Dept {
     function getAutoRespEmail() {
         if(!$this->autorespEmail && $this->row['autoresp_email_id'])
             $this->autorespEmail= new Email($this->row['autoresp_email_id']);
-        else // Defualt to dept email if autoresp is not specified.
-            $this->autorespEmail= $this->getEmail();
+        //else // Defualt to dept email if autoresp is not specified.
+        //    $this->autorespEmail= $this->getEmail();
 
         return $this->autorespEmail;
     }

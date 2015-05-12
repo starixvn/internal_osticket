@@ -35,7 +35,6 @@ class Email {
     }
     
     function load() {
-
         if(!$this->id)
             return false;
         
@@ -86,7 +85,6 @@ class Email {
     }
 
     function getDept() {
-
         if(!$this->dept && $this->dept_id)
             $this->dept= new Dept($this->dept_id);
         
@@ -103,7 +101,6 @@ class Email {
 
     function isSMTPEnabled() {
          return $this->info['smtp_active'];
-
     }
 
     function getSMTPInfo($active=true){
@@ -130,11 +127,9 @@ class Email {
         return false;
     }
 
-
-
     function send($to,$subject,$message,$attachment=null) {
         global $cfg;
-
+		
         //Get SMTP info IF enabled!
         $smtp=array();
         if($this->isSMTPEnabled() && ($info=$this->getSMTPInfo())){ //is SMTP enabled for the current email?
@@ -192,8 +187,15 @@ class Email {
                            'debug' => false,
                            ));
             $result = $mail->send($to, $headers, $body);
-            if(!PEAR::isError($result))
+            if(!PEAR::isError($result)){
+				echo("Message successfully sent!");
+				echo ($from);
+				echo ($to);
                 return true;
+			}
+			else {
+				echo("" . $mail->getMessage() . "");
+			}
 
             $alert=sprintf("Unable to email via %s:%d [%s]\n\n%s\n",$smtp['host'],$smtp['port'],$smtp['username'],$result->getMessage());
             Sys::log(LOG_ALERT,'SMTP Error',$alert,false);
@@ -202,13 +204,23 @@ class Email {
 
         //No SMTP or it failed....use php's native mail function.
         $mail = mail::factory('mail');
-        return PEAR::isError($mail->send($to, $headers, $body))?false:true;
+		$result = $mail->send($to, $headers, $body);
+		
+		if(!PEAR::isError($result)){
+			echo("Message successfully sent!");
+			echo ($from);
+			echo ($to);
+			return true;
+		}
+		else {
+			echo("" . $mail->getMessage() . "");
+			return true;
+		}
     }
 
     //sends emails using native php mail function Email::sendmail( ......);
     //Don't use this function if you can help it.
-    function sendmail($to,$subject,$message,$from) {
-        
+    function sendmail($to,$subject,$message,$from) {        
         require_once ('Mail.php'); // PEAR Mail package
         require_once ('Mail/mime.php'); // PEAR Mail_Mime packge
         
