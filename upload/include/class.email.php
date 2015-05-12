@@ -188,8 +188,7 @@ class Email {
                            ));
             $result = $mail->send($to, $headers, $body);
             if(!PEAR::isError($result)){
-				echo("Message successfully sent!");
-				echo ($from);
+				echo("SMTP Message successfully sent!");
 				echo ($to);
                 return true;
 			}
@@ -208,7 +207,6 @@ class Email {
 		
 		if(!PEAR::isError($result)){
 			echo("Message successfully sent!");
-			echo ($from);
 			echo ($to);
 			return true;
 		}

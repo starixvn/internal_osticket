@@ -103,6 +103,10 @@ class Template {
         $fields['assigned_alert_body']  = array('type'=>'string',   'required'=>1, 'error'=>'Template message required');
         $fields['ticket_overdue_subj']  = array('type'=>'string',   'required'=>1, 'error'=>'Subject required');
         $fields['ticket_overdue_body']  = array('type'=>'string',   'required'=>1, 'error'=>'Template message required');
+		$fields['ticket_update_subj']    = array('type'=>'string',   'required'=>1, 'error'=>'Subject required');
+        $fields['ticket_update_body']    = array('type'=>'string',   'required'=>1, 'error'=>'Template message required');
+		$fields['ticket_delete_subj']    = array('type'=>'string',   'required'=>1, 'error'=>'Subject required');
+        $fields['ticket_delete_body']    = array('type'=>'string',   'required'=>1, 'error'=>'Template message required');
 
         $validate = new Validator($fields);
         if(!$validate->validate($var)){
@@ -128,6 +132,10 @@ class Template {
                  ',ticket_notice_body='.db_input(Format::striptags($var['ticket_notice_body'])).
                  ',ticket_alert_subj='.db_input(Format::striptags($var['ticket_alert_subj'])).
                  ',ticket_alert_body='.db_input(Format::striptags($var['ticket_alert_body'])).
+				 ',ticket_update_subj='.db_input(Format::striptags($var['ticket_update_subj'])).
+                 ',ticket_update_body='.db_input(Format::striptags($var['ticket_update_body'])).
+				 ',ticket_delete_subj='.db_input(Format::striptags($var['ticket_delete_subj'])).
+                 ',ticket_delete_body='.db_input(Format::striptags($var['ticket_delete_body'])).
                  ',message_alert_subj='.db_input(Format::striptags($var['message_alert_subj'])).
                  ',message_alert_body='.db_input(Format::striptags($var['message_alert_body'])).
                  ',note_alert_subj='.db_input(Format::striptags($var['note_alert_subj'])).
@@ -194,6 +202,10 @@ class Template {
                  ',ticket_notice_body='.db_input(Format::striptags($info['ticket_notice_body'])).
                  ',ticket_alert_subj='.db_input(Format::striptags($info['ticket_alert_subj'])).
                  ',ticket_alert_body='.db_input(Format::striptags($info['ticket_alert_body'])).
+				 ',ticket_update_subj='.db_input(Format::striptags($var['ticket_update_subj'])).
+                 ',ticket_update_body='.db_input(Format::striptags($var['ticket_update_body'])).
+				 ',ticket_delete_subj='.db_input(Format::striptags($var['ticket_delete_subj'])).
+                 ',ticket_delete_body='.db_input(Format::striptags($var['ticket_delete_body'])).
                  ',message_alert_subj='.db_input(Format::striptags($info['message_alert_subj'])).
                  ',message_alert_body='.db_input(Format::striptags($info['message_alert_body'])).
                  ',note_alert_subj='.db_input(Format::striptags($info['note_alert_subj'])).

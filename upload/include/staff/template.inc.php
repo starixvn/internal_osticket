@@ -120,6 +120,32 @@ $tpl=($errors && $_POST)?Format::input($_POST):Format::htmlchars($template->getI
                 <td><textarea rows="7" cols="75" name="ticket_alert_body"><?=$tpl['ticket_alert_body']?></textarea>
                     &nbsp;<font class="error">&nbsp;<?=$errors['ticket_alert_body']?></font></td>
             </tr>
+			<tr class="header"><td colspan=2 >Update Ticket Alert</td></tr>
+            <tr class="subheader"><td colspan=2 >Alert sent to staff ( if enabled) on new ticket.</td></tr>
+            <tr>
+                <th>Subject</th>
+                <td>
+                    <input type="text" size="65" maxlength="255" name="ticket_update_subj" value="<?=$tpl['ticket_update_subj']?>">
+                            &nbsp;<font class="error">&nbsp;<?=$errors['ticket_update_subj']?></font></td>
+            </tr>
+            <tr>
+                <th>Message Body:</th>
+                <td><textarea rows="7" cols="75" name="ticket_update_body"><?=$tpl['ticket_update_body']?></textarea>
+                    &nbsp;<font class="error">&nbsp;<?=$errors['ticket_update_body']?></font></td>
+            </tr>
+			<tr class="header"><td colspan=2 >Delete Ticket Alert</td></tr>
+            <tr class="subheader"><td colspan=2 >Alert sent to staff ( if enabled) on new ticket.</td></tr>
+            <tr>
+                <th>Subject</th>
+                <td>
+                    <input type="text" size="65" maxlength="255" name="ticket_delete_subj" value="<?=$tpl['ticket_delete_subj']?>">
+                            &nbsp;<font class="error">&nbsp;<?=$errors['ticket_delete_subj']?></font></td>
+            </tr>
+            <tr>
+                <th>Message Body:</th>
+                <td><textarea rows="7" cols="75" name="ticket_delete_body"><?=$tpl['ticket_delete_body']?></textarea>
+                    &nbsp;<font class="error">&nbsp;<?=$errors['ticket_delete_body']?></font></td>
+            </tr>
             <tr class="header"><td colspan=2 >New Message Alert</td></tr>
             <tr class="subheader"><td colspan=2 >Alert sent to staff ( if enabled) when user replies to an existing ticket.</td></tr>
             <tr>

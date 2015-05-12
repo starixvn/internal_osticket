@@ -328,6 +328,46 @@ class Ticket {
 		
 		return $this->depts;
 	}
+	
+	function getDeptManagers(){
+		$managers = array();
+		
+		if ($this->id){
+			$sql='SELECT DISTINCT d.staff_id FROM '.TICKET_TABLE.' t '.
+			' INNER JOIN '.TICKET_DEPARTMENT_TABLE.' td ON t.ticket_id = td.ticket_id '.
+			' INNER JOIN '.DEPT_TABLE.' d ON td.dept_id = d.dept_id '.
+			' INNER JOIN '.STAFF_TABLE.' s ON d.dept_id = s.dept_id AND d.manager_id = s.staff'.
+			' WHERE t.ticket_id = '.db_input($this->id).' ORDER BY d.dept_name';
+					 
+			if(($res=db_query($sql)) && db_num_rows($res)) {
+				while ($row = db_fetch_array($res)) {
+					array_push($managers, new Staff($row['staff_id']));
+				}
+			}
+		}
+		
+		return $managers;
+	}
+	
+	function getDeptMembers() {
+		$members = array();
+		
+		if ($this->id){
+			$sql='SELECT DISTINCT d.staff_id FROM '.TICKET_TABLE.' t '.
+			' INNER JOIN '.TICKET_DEPARTMENT_TABLE.' td ON t.ticket_id = td.ticket_id '.
+			' INNER JOIN '.DEPT_TABLE.' d ON td.dept_id = d.dept_id '.
+			' INNER JOIN '.STAFF_TABLE.' s ON d.dept_id = s.dept_id'.
+			' WHERE t.ticket_id = '.db_input($this->id).' ORDER BY d.dept_name';
+					 
+			if(($res=db_query($sql)) && db_num_rows($res)) {
+				while ($row = db_fetch_array($res)) {
+					array_push($members, new Staff($row['staff_id']));
+				}
+			}
+		}
+		
+		return $members;
+	}
 
     function getPriorityId() {
         return $this->priority_id;
@@ -555,24 +595,33 @@ class Ticket {
         global $cfg;
 
         $staff = $this->getStaff();
+		
+		$listDeptName = '';
+		foreach($this->getDepts() as $dept) {
+			$listDeptName.='<'.$dept->getName().'> ';
+		}
 
         /* $search = array('/%id/','/%ticket/','/%email/','/%name/','/%subject/','/%topic/','/%phone/','/%status/','/%priority/',
           '/%dept/','/%assigned_staff/','/%createdate/','/%duedate/','/%closedate/','/%url/'); */
         // customized osticket
-        $search = array('/%id/', '/%ticket/', '/%name/', '/%subject/', '/%league/', '/%match/', '/%trader/', '/%suspender/',
+        $search = array('/%id/', '/%ticket/', '/%email/', '/%name/', '/%subject/', '/%dept/',
+			'/%sport/', '/%league/', '/%match/', '/%trader/', '/%suspender/',
 			'/%csd/', '/%topic/', '/%phone/', '/%status/', '/%priority/',
-            '/%dept/', '/%assigned_staff/', '/%createdate/', '/%duedate/', '/%closedate/', '/%url/');
+            '/%assigned_staff/', '/%createdate/', '/%duedate/', '/%closedate/', '/%url/');
         // end
         $replace = array($this->getId(),
             $this->getExtId(),
+			$this->getEmail(),
             $this->getName(),
             $this->getSubject(),
+			$listDeptName,
             // customized osticket
-            $this->getLeague(),
-            $this->getMatch(),
-            $this->getTrader(),
-            $this->getSuspender(),
-            $this->getCsd(),
+			$this->getSportName(),
+            $this->getLeagueName(),
+            $this->getMatchName(),
+            $this->getTraderName(),
+            $this->getSuspenderName(),
+            $this->getCsdName(),
             // end
             $this->getHelpTopic(),
             $this->getPhoneNumber(),
@@ -603,58 +652,53 @@ class Ticket {
         $sql = 'UPDATE ' . TICKET_TABLE . ' SET isoverdue=1,updated=NOW() WHERE ticket_id=' . db_input($this->getId());
         if (db_query($sql) && db_affected_rows()) {
             //echo $sql;
+			$tplId = $cfg->getDefaultTemplateId();
+			$fromEmail = $cfg->getAlertEmail() ? $cfg->getAlertEmail() : $cfg->getDefaultEmail();
 			
-			foreach($this->depts as $dept) {
-				if (!$dept || !($tplId = $dept->getTemplateId()))
-					$tplId = $cfg->getDefaultTemplateId();			
+			//if requested && enabled fire nasty alerts.
+			if ($bitch && $cfg->alertONOverdueTicket()) {
+				$sql = 'SELECT ticket_overdue_subj,ticket_overdue_body FROM ' . EMAIL_TEMPLATE_TABLE .
+						' WHERE cfg_id=' . db_input($cfg->getId()) . ' AND tpl_id=' . db_input($tplId);
+				if (($resp = db_query($sql)) && db_num_rows($resp) 
+					&& list($subj, $body) = db_fetch_row($resp)
+					&& $fromEmail && $fromEmail->getId()) {
+					$body = $this->replaceTemplateVars($body);
+					$subj = $this->replaceTemplateVars($subj);
+					
+					//Fire and email to admin. No questions asked.
+					$alert = str_replace("%staff", 'Admin', $body);
+					$fromEmail->send($cfg->getAdminEmail(), $subj, $alert);
 
-				//if requested && enabled fire nasty alerts.
-				if ($bitch && $cfg->alertONOverdueTicket()) {
-					$sql = 'SELECT ticket_overdue_subj,ticket_overdue_body FROM ' . EMAIL_TEMPLATE_TABLE .
-							' WHERE cfg_id=' . db_input($cfg->getId()) . ' AND tpl_id=' . db_input($tplId);
-					if (($resp = db_query($sql)) && db_num_rows($resp) && list($subj, $body) = db_fetch_row($resp)) {
-						$body = $this->replaceTemplateVars($body, $dept->getId());
-						$subj = $this->replaceTemplateVars($subj, $dept->getId());
-
-						if (!($email = $cfg->getAlertEmail()))
-							$email = $cfg->getDefaultEmail();
-
-						if ($email && $email->getId()) {
-							//Fire and email to admin. No questions asked.
-							$alert = str_replace("%staff", 'Admin', $body);
-							$email->send($cfg->getAdminEmail(), $subj, $alert);
-
-							/*                         * * Build list of recipients and fire the alerts ** */
-							$recipients = array();
-							//Assigned staff... if any
-							if ($this->isAssigned() && $cfg->alertAssignedONOverdueTicket()) {
-								$recipients[] = $this->getStaff();
-							} elseif ($cfg->alertDeptMembersONOverdueTicket()) { //Alert assigned or dept members not both
-								//All dept members.
-								$sql = 'SELECT staff_id FROM ' . STAFF_TABLE . ' WHERE dept_id=' . db_input($dept->getId());
-								if (($users = db_query($sql)) && db_num_rows($users)) {
-									while (list($id) = db_fetch_row($users))
-										$recipients[] = new Staff($id);     //possible mem issues with a large number of staff?
-								}
-							}
-							//Always blame the manager
-							if ($cfg->alertDeptManagerONOverdueTicket() && $dept) {
-								$recipients[] = $dept->getManager();
-							}
-							//Ok...we are ready to go....
-							$sentlist = array();
-							foreach ($recipients as $k => $staff) {
-								if (!$staff || !is_object($staff) || !$staff->isAvailable())
-									continue;
-								if (in_array($staff->getEmail(), $sentlist))
-									continue; //avoid duplicate emails.
-								$alert = str_replace("%staff", $staff->getFirstName(), $body);
-								$email->send($staff->getEmail(), $subj, $alert);
-							}
-						}
-					}else {
-						Sys::log(LOG_WARNING, 'Template Fetch Error', "Unable to fetch 'overdue' alert template #$tplId");
+					/* * * Build list of recipients and fire the alerts ** */
+					$recipients = array();
+					//Assigned staff... if any
+					if ($this->isAssigned() && $cfg->alertAssignedONOverdueTicket()) {
+						array_push($recipients, $this->getStaff());
+					} elseif ($cfg->alertDeptMembersONOverdueTicket()) { //Alert assigned or dept members not both
+						array_push($recipients, $this->getDeptMembers());
 					}
+					//Always blame the manager
+					if ($cfg->alertDeptManagerONOverdueTicket()) {
+						array_push($recipients, $this->getDeptManagers());
+					}
+					//Ok...we are ready to go....
+					$sentlist = array();
+					foreach ($recipients as $staff) {
+						if (!$staff || !is_object($staff) || !$staff->isAvailable())
+							continue;
+						if (in_array($staff->getEmail(), $sentlist))
+							continue; //avoid duplicate emails.
+						$alert = str_replace("%staff", $staff->getFirstName(), $body);
+						$fromEmail->send($staff->getEmail(), $subj, $alert);
+						array_push($sentlist, $staff->getEmail());
+					}
+					
+					//send email to department
+					foreach($this->getEmails() as $email){
+						$fromEmail->send($email->getEmail(), $subj, $body);
+					}
+				}else {
+					Sys::log(LOG_WARNING, 'Template Fetch Error', "Unable to fetch 'overdue' alert template #$tplId");
 				}
 			}
             return true;
@@ -692,11 +736,13 @@ class Ticket {
             if ($alertstaff && ($thisuser && $staff->getId() != $thisuser->getId())) { //No alerts for self assigned.
                 //Send Notice + Message to assignee.
 				$tplId = $cfg->getDefaultTemplateId();
-				$fromEmail = $cfg->getDefaultEmail();
+				$fromEmail = $cfg->getAlertEmail() ? $cfg->getAlertEmail() : $cfg->getDefaultEmail();
 			
 				$sql = 'SELECT assigned_alert_subj,assigned_alert_body FROM ' . EMAIL_TEMPLATE_TABLE .
 						' WHERE cfg_id=' . db_input($cfg->getId()) . ' AND tpl_id=' . db_input($tplId);
-				if (($resp = db_query($sql)) && db_num_rows($resp) && list($subj, $body) = db_fetch_row($resp)) {
+				if (($resp = db_query($sql)) && db_num_rows($resp) 
+					&& list($subj, $body) = db_fetch_row($resp)
+					&& $fromEmail && $fromEmail->getId()) {
 					$body = $this->replaceTemplateVars($body);
 					$subj = $this->replaceTemplateVars($subj);
 					
@@ -705,9 +751,7 @@ class Ticket {
 					$body = str_replace("%assignee", $staff->getName(), $body);
 					$body = str_replace("%assigner", ($thisuser) ? $thisuser->getName() : 'System', $body);
 
-					if ($fromEmail) {
-						$fromEmail->send($staff->getEmail(), $subj, $body);
-					}
+					$fromEmail->send($staff->getEmail(), $subj, $body);
 				} else {
 					Sys::log(LOG_WARNING, 'Template Fetch Error', "Unable to fetch 'assigned' alert template #$tplId");
 				}
@@ -773,9 +817,8 @@ class Ticket {
                     }
                 }
 				
-				$emails = $this->getEmails();
 				$tplId = $cfg->getDefaultTemplateId();
-				$fromEmail = $cfg->getDefaultEmail();
+				$fromEmail = $cfg->getAlertEmail() ? $cfg->getAlertEmail() : $cfg->getDefaultEmail();
 				
 				$autorespond = true; //if anabled.
 				//See if the incoming email is local - no autoresponse.
@@ -789,16 +832,15 @@ class Ticket {
 					$sql = 'SELECT message_autoresp_subj,message_autoresp_body FROM ' . EMAIL_TEMPLATE_TABLE .
 							' WHERE cfg_id=' . db_input($cfg->getId()) . ' AND tpl_id=' . db_input($tplId);
 							
-					if (($resp = db_query($sql)) && db_num_rows($resp) && list($subj, $body) = db_fetch_row($resp)) {
+					if (($resp = db_query($sql)) && db_num_rows($resp) 
+						&& (list($subj, $body) = db_fetch_row($resp)) && $fromEmail) {
 						$body = $this->replaceTemplateVars($body);
 						$subj = $this->replaceTemplateVars($subj);
 						//Reply separator tag.
 						if ($cfg->stripQuotedReply() && ($tag = $cfg->getReplySeparator()))
 							$body = "\n$tag\n\n" . $body;
 						
-						if ($fromEmail  && $fromEmail->getId()) {
-							$fromEmail->send($this->getEmail(), $subj, $body);
-						}
+						$fromEmail->send($this->getEmail(), $subj, $body);
 					} else {
 						Sys::log(LOG_WARNING, 'Template Fetch Error', "Unable to fetch 'new message' auto response template #$tplId");
 					}
@@ -810,36 +852,40 @@ class Ticket {
 							' WHERE cfg_id=' . db_input($cfg->getId()) . ' AND tpl_id=' . db_input($tplId);
 
 					$resp = db_query($sql);
-					if (($resp = db_query($sql)) && db_num_rows($resp) && list($subj, $body) = db_fetch_row($resp)) {
+					if (($resp = db_query($sql)) && db_num_rows($resp) 
+						&& (list($subj, $body) = db_fetch_row($resp))  && $fromEmail) {
 						$body = $this->replaceTemplateVars($body);
 						$subj = $this->replaceTemplateVars($subj);
 						$body = str_replace("%message", $msg, $body);
+						
+						//send mail to department
+						foreach ($this->getEmails() as $email) {
+							$fromEmail->send($email->getEmail(), $subj, $body);
+						}
 
-						if ($fromEmail && $fromEmail->getId()) {
-							//Build list of recipients and fire the alerts.
-							$recipients = array();
-							//Last respondent.
-							if ($cfg->alertLastRespondentONNewMessage() || $cfg->alertAssignedONNewMessage())
-								$recipients[] = $this->getLastRespondent();
-							//Assigned staff if any...could be the last respondent
-							if ($this->isAssigned())
-								$recipients[] = $this->getStaff();
-							//Dept manager
-							if ($cfg->alertDeptManagerONNewMessage() && $dept)
-								$recipients[] = $dept->getManager();
+						//Build list of recipients and fire the alerts.
+						$recipients = array();
+						//Last respondent.
+						if ($cfg->alertLastRespondentONNewMessage() || $cfg->alertAssignedONNewMessage())
+							array_push($recipients, $this->getLastRespondent());
+						//Assigned staff if any...could be the last respondent
+						if ($this->isAssigned())
+							array_push($recipients, $this->getStaff());
+						//Dept manager
+						if ($cfg->alertDeptManagerONNewMessage())
+							array_push($recipients[], $this->getDeptManagers());
 
-							//Baby we are ready...take me
-							$sentlist = array(); //I know it sucks...but..it works.
-							foreach ($recipients as $k => $staff) {
-								//TODO: log error messages.
-								if (!$staff || !is_object($staff) || !$staff->getEmail() || !$staff->isAvailable())
-									continue;
-								if (in_array($staff->getEmail(), $sentlist))
-									continue; //avoid duplicate emails.
-								$alert = str_replace("%staff", $staff->getFirstName(), $body);
-								$fromEmail->send($staff->getEmail(), $subj, $alert);
-								$sentlist[] = $staff->getEmail();
-							}
+						//Baby we are ready...take me
+						$sentlist = array(); //I know it sucks...but..it works.
+						foreach ($recipients as $staff) {
+							//TODO: log error messages.
+							if (!$staff || !is_object($staff) || !$staff->getEmail() || !$staff->isAvailable())
+								continue;
+							if (in_array($staff->getEmail(), $sentlist))
+								continue; //avoid duplicate emails.
+							$alert = str_replace("%staff", $staff->getFirstName(), $body);
+							$fromEmail->send($staff->getEmail(), $subj, $alert);
+							array_push($sentlist, $staff->getEmail());
 						}
 					}else {
 						Sys::log(LOG_WARNING, 'Template Fetch Error', "Unable to fetch 'new message' alert template #$tplId");
@@ -870,14 +916,14 @@ class Ticket {
             if (!$canalert) //No alert/response 
                 return $resp_id;
 			
-			$emails = $this->getEmails();
-			$fromEmail = $cfg->getDefaultEmail();
 			$tplId = $cfg->getDefaultTemplateId();
+			$fromEmail = $cfg->getAlertEmail() ? $cfg->getAlertEmail() : $cfg->getDefaultEmail();
 			//Send Response to client...based on the template...
 			//TODO: check department level templates...if set.			
 			$sql = 'SELECT ticket_reply_subj,ticket_reply_body FROM ' . EMAIL_TEMPLATE_TABLE .
 					' WHERE cfg_id=' . db_input($cfg->getId()) . ' AND tpl_id=' . db_input($tplId);
-			if (($resp = db_query($sql)) && db_num_rows($resp) && list($subj, $body) = db_fetch_row($resp)) {
+			if (($resp = db_query($sql)) && db_num_rows($resp) 
+				&& (list($subj, $body) = db_fetch_row($resp)) && $fromEmail) {
 				$body = $this->replaceTemplateVars($body);
 				$subj = $this->replaceTemplateVars($subj);
 				$body = str_replace('%response', $response, $body);
@@ -889,7 +935,13 @@ class Ticket {
 
 				if ($cfg->stripQuotedReply() && ($tag = $cfg->getReplySeparator()))
 					$body = "\n$tag\n\n" . $body;
-				foreach($emails as $email) {
+				
+				if($this->getEmail()) {
+					$fromEmail->send($this->getEmail(), $subj, $body, $file);
+				}
+				
+				// send mail to department
+				foreach($this->getEmails() as $email) {
 					if ($fromEmail && $fromEmail->getId()) {
 						$fromEmail->send($email->getEmail(), $subj, $body, $file);
 					}
@@ -930,39 +982,44 @@ class Ticket {
             //If enabled...send alert to staff (Internal Note Alert)
             if ($alert && $cfg->alertONNewNote()) {
 				$tplId = $cfg->getDefaultTemplateId();
-				$fromEmail = $cfg->getDefaultEmail();
+				$fromEmail = $cfg->getAlertEmail() ? $cfg->getAlertEmail() : $cfg->getDefaultEmail();
+				
                 $sql = 'SELECT note_alert_subj,note_alert_body FROM ' . EMAIL_TEMPLATE_TABLE .
                         ' WHERE cfg_id=' . db_input($cfg->getId()) . ' AND tpl_id=' . db_input($tplId);
-                if (($resp = db_query($sql)) && db_num_rows($resp) && list($subj, $body) = db_fetch_row($resp)) {
+                if (($resp = db_query($sql)) && db_num_rows($resp) 
+					&& (list($subj, $body) = db_fetch_row($resp)) && $fromEmail) {
                     $body = $this->replaceTemplateVars($body);
                     $subj = $this->replaceTemplateVars($subj);
                     $body = str_replace('%note', "$title\n\n$note", $body);
+					
+					// send email to department
+					foreach($this->getEmails() as $email) {
+						$fromEmail->send($email->getEmail(), $subj, $body); 
+					}
 
-                    if ($email && $email->getId()) {
-                        //Build list of recipients and fire the alerts.
-                        $recipients = array();
-                        //Last respondent.
-                        if ($cfg->alertLastRespondentONNewNote() || $cfg->alertAssignedONNewNote())
-                            $recipients[] = $this->getLastRespondent();
-                        //Assigned staff if any...could be the last respondent
-                        if ($this->isAssigned())
-                            $recipients[] = $this->getStaff();
-                        //Dept manager
-                        if ($cfg->alertDeptManagerONNewNote() && $dept)
-                            $recipients[] = $dept->getManager();
+					//Build list of recipients and fire the alerts.
+					$recipients = array();
+					//Last respondent.
+					if ($cfg->alertLastRespondentONNewNote() || $cfg->alertAssignedONNewNote())
+						array_push($recipients, $this->getLastRespondent());
+					//Assigned staff if any...could be the last respondent
+					if ($this->isAssigned())
+						array_push($recipients, $this->getStaff());
+					//Dept manager
+					if ($cfg->alertDeptManagerONNewNote())
+						array_push($recipients, $this->getDeptManagers());
 
-                        $sentlist = array(); //I know it sucks...but..it works.
-                        foreach ($recipients as $k => $staff) {
-                            //TODO: log error messages.
-                            if (!$staff || !is_object($staff) || !$staff->getEmail() || !$staff->isAvailable())
-                                continue;
-                            if (in_array($staff->getEmail(), $sentlist) || ($thisuser && $thisuser->getId() == $staff->getId()))
-                                continue;
-                            $alert = str_replace('%staff', $staff->getFirstName(), $body);
-                            $email->send($staff->getEmail(), $subj, $alert);
-                            $sentlist[] = $staff->getEmail();
-                        }
-                    }
+					$sentlist = array(); //I know it sucks...but..it works.
+					foreach ($recipients as $staff) {
+						//TODO: log error messages.
+						if (!$staff || !is_object($staff) || !$staff->getEmail() || !$staff->isAvailable())
+							continue;
+						if (in_array($staff->getEmail(), $sentlist) || ($thisuser && $thisuser->getId() == $staff->getId()))
+							continue;
+						$alert = str_replace('%staff', $staff->getFirstName(), $body);
+						$fromEmail->send($staff->getEmail(), $subj, $alert);
+						array_push($sentlist, $staff->getEmail());
+					}
                 }else {
                     Sys::log(LOG_WARNING, 'Template Fetch Error', "Unable to fetch 'new note' alert template #$tplId");
                 }
@@ -1049,9 +1106,12 @@ class Ticket {
     }
 
     function delete() {
-		global $cfg, $thisuser;
+		global $cfg;
+		
 		$emails = $this->getEmails();
-		$fromEmail = $cfg->getDefaultEmail();
+		//get email template
+		$tplId = $cfg->getDefaultTemplateId();
+		$fromEmail = $cfg->getAlertEmail() ? $cfg->getAlertEmail() : $cfg->getDefaultEmail();
 		
         if (db_query('DELETE FROM ' . TICKET_TABLE . ' WHERE ticket_id=' . $this->getId()) && db_affected_rows()):
             db_query('DELETE FROM ' . TICKET_DEPARTMENT_TABLE .' WHERE ticket_id=' . $this->getId());
@@ -1061,11 +1121,15 @@ class Ticket {
             $this->deleteAttachmentByTicketId();
             $this->deleteAttachments();
 			
-			$body = $this->replaceTemplateVars('The ticket #'.$this->getExtId().
-				' is deleted by '.$thisuser->getName().' <'.$thisuser->getEmail().'>');
-			$subj = $this->replaceTemplateVars('The ticket #'.$this->getExtId().' is deleted');
-			foreach($emails as $email){
-				if ($fromEmail && $fromEmail->getId()) {
+			$sql = 'SELECT ticket_delete_subj,ticket_delete_body FROM ' . EMAIL_TEMPLATE_TABLE .
+					' WHERE cfg_id=' . db_input($cfg->getId()) . ' AND tpl_id=' . db_input($tplId);			
+			if (($resp = db_query($sql)) && db_num_rows($resp) 
+				&& (list($subj, $body) = db_fetch_row($resp)) && $fromEmail) {
+				$body = $this->replaceTemplateVars($body);
+				$subj = $this->replaceTemplateVars($subj);
+				
+				// send email to department.
+				foreach($emails as $email){
 					$fromEmail->send($email->getEmail(), $subj, $body);
 				}
 			}
@@ -1073,7 +1137,7 @@ class Ticket {
             return TRUE;
         endif;
 
-        return FALSE;
+        return TRUE;
     }
 	
     function fixAttachments() {
@@ -1379,17 +1443,18 @@ class Ticket {
                     }
                 }
 				
-				$emails = $this->getEmails();
 				$tplId = $cfg->getDefaultTemplateId();
-				$fromEmail = $cfg->getDefaultEmail();
-				
-				$sql = 'SELECT ticket_notice_subj,ticket_notice_body FROM ' . EMAIL_TEMPLATE_TABLE .
+				$fromEmail = $cfg->getAlertEmail() ? $cfg->getAlertEmail() : $cfg->getDefaultEmail();
+				// get email template.
+				$sql = 'SELECT ticket_update_subj,ticket_update_body FROM ' . EMAIL_TEMPLATE_TABLE .
 						' WHERE cfg_id=' . db_input($cfg->getId()) . ' AND tpl_id=' . db_input($tplId);
-
-				if (($resp = db_query($sql)) && db_num_rows($resp) && list($subj, $body) = db_fetch_row($resp) && $fromEmail) {
+				
+				if (($resp = db_query($sql)) && db_num_rows($resp) 
+					&& (list($subj, $body) = db_fetch_row($resp)) && $fromEmail) {
 					$body = $this->replaceTemplateVars($body);
 					$subj = $this->replaceTemplateVars($subj);
 					$body = str_replace('%message', $var['note'], $body);
+					
 					//Email attachment when attached AND if emailed attachments are allowed!
 					$file = null;
 					$attachment = $_FILES['attachment'];
@@ -1400,17 +1465,14 @@ class Ticket {
 					if ($cfg->stripQuotedReply() && ($tag = trim($cfg->getReplySeparator())))
 						$body = "\n$tag\n\n" . $body;
 					
-					foreach($emails as $email){
-						if ($fromEmail && $fromEmail->getId()) {
-							$fromEmail->send($email->getEmail(), $subj, $body);
-						}
+					foreach($this->getEmails() as $email){
+						$fromEmail->send($email->getEmail(), $subj, $body, $file);
 					}
 				} else {
 					//We have a big problem...alert admin...
 					$msg = 'Problems fetching response template for ticket#' . $ticket->getId() . ' Possible config error - template #' . $tplId;
 					Sys::alertAdmin('System Error', $msg);
-				}
-				
+				}				
 				
                 $this->postNote('Ticket Updated', $var['note']);
                 $this->reload();
@@ -1489,6 +1551,8 @@ class Ticket {
                 $errors['attachment'] = 'File is too big. Max ' . $cfg->getMaxFileSize() . ' bytes allowed';
         }
 
+		$fromEmail = $cfg->getAlertEmail() ? $cfg->getAlertEmail() : $cfg->getDefaultEmail();
+		$tplId = $cfg->getDefaultTemplateId();
         //check ticket limits..if limit set is >0 
         //TODO: Base ticket limits on SLA...
         if ($var['email'] && !$errors && $cfg->getMaxOpenTickets() > 0) {
@@ -1496,14 +1560,11 @@ class Ticket {
             if ($openTickets >= $cfg->getMaxOpenTickets()) {
                 $errors['err'] = "You've reached the maximum open tickets allowed.";
                 //Send the notice only once (when the limit is reached) incase of autoresponders at client end.
-                if ($cfg->getMaxOpenTickets() == $openTickets && $cfg->sendOverlimitNotice()) {					
-					$fromEmail = $cfg->getDefaultEmail();
-					$tplId = $cfg->getDefaultTemplateId();
-					
+                if ($cfg->getMaxOpenTickets() == $openTickets && $cfg->sendOverlimitNotice()) {
 					$sql = 'SELECT ticket_overlimit_subj,ticket_overlimit_body FROM ' . EMAIL_TEMPLATE_TABLE .
 						' WHERE cfg_id=' . db_input($cfg->getId()) . ' AND tpl_id=' . db_input($tplId);
 					$resp = db_query($sql);
-					if (db_num_rows($resp) && list($subj, $body) = db_fetch_row($resp) && $fromEmail) {
+					if (db_num_rows($resp) && (list($subj, $body) = db_fetch_row($resp)) && $fromEmail) {
 						$body = str_replace("%name", $var['name'], $body);
 						$body = str_replace("%email", $var['email'], $body);
 						$body = str_replace("%url", $cfg->getBaseUrl(), $body);
@@ -1698,49 +1759,47 @@ class Ticket {
 				db_query('INSERT INTO '.TICKET_DEPARTMENT_TABLE.' SET ticket_id='.db_input($id).',dept_id='.db_input($deptId));
 			}
 			
-			$tplId = $cfg->getDefaultTemplateId();
-			$fromEmail = $cfg->getDefaultEmail();
-			
 			//If enabled...send alert to staff (New Ticket Alert)
 			if ($alertstaff && $cfg->alertONNewTicket() && is_object($ticket)) {
 				$sql = 'SELECT ticket_alert_subj,ticket_alert_body FROM ' . EMAIL_TEMPLATE_TABLE .
 						' WHERE cfg_id=' . db_input($cfg->getId()) . ' AND tpl_id=' . db_input($tplId);
-				if (($resp = db_query($sql)) && db_num_rows($resp) && list($subj, $body) = db_fetch_row($resp)) {
+				if (($resp = db_query($sql)) && db_num_rows($resp) 
+					&& (list($subj, $body) = db_fetch_row($resp)) && $fromEmail) {
 					$body = $ticket->replaceTemplateVars($body);
 					$subj = $ticket->replaceTemplateVars($subj);
 					$body = str_replace('%message', ($var['issue'] ? $var['issue'] : $var['message']), $body);
 					
-					if ($fromEmail && $fromEmail->getId()) {
-						$sentlist = array();
-						//Admin Alert.
-						if ($cfg->alertAdminONNewTicket()) {
-							$alert = str_replace("%staff", 'Admin', $body);
-							$fromEmail->send($cfg->getAdminEmail(), $subj, $alert);
-							$sentlist[] = $cfg->getAdminEmail();
-						}
-						//get the list
-						$recipients = array();
-						//Dept. Manager
-						if ($cfg->alertDeptManagerONNewTicket()) {
-							$recipients[] = $dept->getManager();
-						}
-						//Staff members
-						if ($cfg->alertDeptMembersONNewTicket()) {
-							$sql = 'SELECT staff_id FROM ' . STAFF_TABLE . ' WHERE onvacation=0 AND dept_id=' . db_input($dept->getId());
-							if (($users = db_query($sql)) && db_num_rows($users)) {
-								while (list($id) = db_fetch_row($users))
-									$recipients[] = new Staff($id);
-							}
-						}
-						foreach ($recipients as $k => $staff) {
-							if (!$staff || !is_object($staff) || !$staff->isAvailable())
-								continue;
-							if (in_array($staff->getEmail(), $sentlist))
-								continue; //avoid duplicate emails.
-							$alert = str_replace("%staff", $staff->getFirstName(), $body);
-							$fromEmail->send($staff->getEmail(), $subj, $alert);
-							$sentlist[] = $staff->getEmail();
-						}
+					$sentlist = array();
+					//Department Alert.
+					foreach($ticket->getEmails() as $email) {
+						$fromEmail->send($email->getEmail(), $subj, $body);
+						array_push($sentlist, $email->getEmail());
+					}
+					
+					//Admin Alert.
+					if ($cfg->alertAdminONNewTicket()) {
+						$alert = str_replace("%staff", 'Admin', $body);
+						$fromEmail->send($cfg->getAdminEmail(), $subj, $alert);
+						array_push($sentlist, $cfg->getAdminEmail());
+					}
+					//get the list
+					$recipients = array();
+					//Dept. Manager
+					if ($cfg->alertDeptManagerONNewTicket()) {
+						array_push($recipients, $ticket->getDeptManagers());
+					}
+					//Staff members
+					if ($cfg->alertDeptMembersONNewTicket()) {
+						array_push($recipients, $ticket->getDeptMembers()); 
+					}
+					foreach ($recipients as $staff) {
+						if (!$staff || !is_object($staff) || !$staff->isAvailable())
+							continue;
+						if (in_array($staff->getEmail(), $sentlist))
+							continue; //avoid duplicate emails.
+						$alert = str_replace("%staff", $staff->getFirstName(), $body);
+						$fromEmail->send($staff->getEmail(), $subj, $alert);
+						array_push($sentlist, $staff->getEmail());
 					}
 				}else {
 					Sys::log(LOG_WARNING, 'Template Fetch Error', "Unable to fetch 'new ticket' alert template #$tplId");
@@ -1770,7 +1829,6 @@ class Ticket {
             //post issue as a response...
             $msgId = $ticket->getLastMsgId();
             $issue = $ticket->replaceTemplateVars($var['issue']);
-			$emails = $ticket->getEmails();
 			
             if (($respId = $ticket->postResponse($msgId, $issue, 'none', null, false))) { //Note that we're overwriting alerts.
                 //Mark the ticket unanswered - postResponse marks it answered which is not the desired state.
@@ -1783,7 +1841,8 @@ class Ticket {
 					$sql = 'SELECT ticket_notice_subj,ticket_notice_body FROM ' . EMAIL_TEMPLATE_TABLE .
 							' WHERE cfg_id=' . db_input($cfg->getId()) . ' AND tpl_id=' . db_input($tplId);
 
-					if (($resp = db_query($sql)) && db_num_rows($resp) && list($subj, $body) = db_fetch_row($resp) && $fromEmail) {
+					if (($resp = db_query($sql)) && db_num_rows($resp) 
+						&& list($subj, $body) = db_fetch_row($resp) && $fromEmail) {
 						$body = $ticket->replaceTemplateVars($body);
 						$subj = $ticket->replaceTemplateVars($subj);
 						$body = str_replace('%message', $var['issue'], $body);
@@ -1797,9 +1856,7 @@ class Ticket {
 						if ($cfg->stripQuotedReply() && ($tag = trim($cfg->getReplySeparator())))
 							$body = "\n$tag\n\n" . $body;
 						
-						foreach($emails as $email) {
-							$fromEmail->send($email->getEmail(), $subj, $body, $file);
-						}
+						$fromEmail->send($this->getEmail(), $subj, $body, $file);
 					} else {
 						//We have a big problem...alert admin...
 						$msg = 'Problems fetching response template for ticket#' . $ticket->getId() . ' Possible config error - template #' . $tplId;
