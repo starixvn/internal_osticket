@@ -333,11 +333,11 @@ class Ticket {
 		$managers = array();
 		
 		if ($this->id){
-			$sql='SELECT DISTINCT d.staff_id FROM '.TICKET_TABLE.' t '.
+			$sql='SELECT DISTINCT s.staff_id FROM '.TICKET_TABLE.' t '.
 			' INNER JOIN '.TICKET_DEPARTMENT_TABLE.' td ON t.ticket_id = td.ticket_id '.
 			' INNER JOIN '.DEPT_TABLE.' d ON td.dept_id = d.dept_id '.
-			' INNER JOIN '.STAFF_TABLE.' s ON d.dept_id = s.dept_id AND d.manager_id = s.staff'.
-			' WHERE t.ticket_id = '.db_input($this->id).' ORDER BY d.dept_name';
+			' INNER JOIN '.STAFF_TABLE.' s ON d.dept_id = s.dept_id AND d.manager_id = s.staff_id'.
+			' WHERE t.ticket_id = '.db_input($this->id);
 					 
 			if(($res=db_query($sql)) && db_num_rows($res)) {
 				while ($row = db_fetch_array($res)) {
@@ -353,11 +353,11 @@ class Ticket {
 		$members = array();
 		
 		if ($this->id){
-			$sql='SELECT DISTINCT d.staff_id FROM '.TICKET_TABLE.' t '.
+			$sql='SELECT DISTINCT s.staff_id FROM '.TICKET_TABLE.' t '.
 			' INNER JOIN '.TICKET_DEPARTMENT_TABLE.' td ON t.ticket_id = td.ticket_id '.
 			' INNER JOIN '.DEPT_TABLE.' d ON td.dept_id = d.dept_id '.
 			' INNER JOIN '.STAFF_TABLE.' s ON d.dept_id = s.dept_id'.
-			' WHERE t.ticket_id = '.db_input($this->id).' ORDER BY d.dept_name';
+			' WHERE t.ticket_id = '.db_input($this->id);
 					 
 			if(($res=db_query($sql)) && db_num_rows($res)) {
 				while ($row = db_fetch_array($res)) {
@@ -428,12 +428,6 @@ class Ticket {
         $this->lock_id = TicketLock::acquire($this->getId(), $thisuser->getId()); //Create a new lock..
         //load and return the newly created lock if any!
         return $this->getLock();
-    }
-
-    function getDept() {
-        if (!$this->dept && $this->dept_id)
-            $this->dept = new Dept($this->dept_id);
-        return $this->dept;
     }
 
     function getStaffId() {
@@ -579,7 +573,7 @@ class Ticket {
     }
 
     function onMessage() {
-        db_query('UPDATE ' . TICKET_TABLE . ' SET isanswered=0,lastmessage=NOW() WHERE ticket_id=' . db_input($this->getId()));
+        db_query('UPDATE ' . TICKET_TABLE . ' SET isanswered=0, lastmessage=NOW() WHERE ticket_id=' . db_input($this->getId()));
     }
 
     function onNote() {
@@ -590,6 +584,282 @@ class Ticket {
         
     }
 
+	//get list email of recipients on new ticket
+	function getListEmailOfRecipientsOnNewTicket() {
+		global $cfg;
+		$sentlist = array();
+		
+		//check send email
+		if($cfg->alertONNewTicket()) {
+			//Admin
+			if ($cfg->alertAdminONNewTicket() && $cfg->getAdminEmail()) {
+				array_push($sentlist, $cfg->getAdminEmail());
+			}
+			
+			//Departments
+			if ($cfg->alertDeptOnNewTicket() && $this->getEmails()) {
+				foreach($this->getEmails() as $email) {
+					//avoid duplicate emails
+					if (!in_array($email->getEmail(), $sentlist)) {
+						array_push($sentlist, $email->getEmail());
+					}
+				}
+			}
+			
+			//Managers
+			if ($cfg->alertDeptManagerONNewTicket() && $this->getDeptManagers()) {
+				foreach($this->getDeptManagers() as $staff) {
+					//avoid duplicate emails
+					if (!in_array($staff->getEmail(), $sentlist)) {
+						array_push($sentlist, $staff);
+					}
+				}
+			}
+			
+			//Members
+			if ($cfg->alertDeptMembersONNewTicket() && $this->getDeptMembers()) {
+				foreach($this->getDeptMembers() as $staff) {
+					//avoid duplicate emails
+					if (!in_array($staff->getEmail(), $sentlist)) {
+						array_push($sentlist, $staff->getEmail());
+					}
+				}
+			}
+		}
+		
+		return $sentlist;
+	}
+	
+	//get list email of recipients on update ticket
+	function getListEmailOfRecipientsOnUpdateTicket() {
+		global $cfg;
+		$sentlist = array();
+		
+		//check send email
+		if($cfg->alertONUpdateTicket()) {
+			//Admin
+			if ($cfg->alertAdminONUpdateTicket() && $cfg->getAdminEmail()) {
+				array_push($sentlist, $cfg->getAdminEmail());
+			}
+			
+			//Departments
+			if ($cfg->alertDeptONUpdateTicket() && $this->getEmails()) {
+				foreach($this->getEmails() as $email) {
+					//avoid duplicate emails
+					if (!in_array($email->getEmail(), $sentlist)) {
+						array_push($sentlist, $email->getEmail());
+					}
+				}
+			}
+			
+			//Managers
+			if ($cfg->alertDeptManagerONUpdateTicket() && $this->getDeptManagers()) {
+				foreach($this->getDeptManagers() as $staff) {
+					//avoid duplicate emails
+					if (!in_array($staff->getEmail(), $sentlist)) {
+						array_push($sentlist, $staff);
+					}
+				}
+			}
+			
+			//Members
+			if ($cfg->alertDeptMembersONUpdateTicket() && $this->getDeptMembers()) {
+				foreach($this->getDeptMembers() as $staff) {
+					//avoid duplicate emails
+					if (!in_array($staff->getEmail(), $sentlist)) {
+						array_push($sentlist, $staff->getEmail());
+					}
+				}
+			}
+		}
+		
+		return $sentlist;
+	}
+	
+	//get list email of recipients on delete ticket
+	function getListEmailOfRecipientsOnDeleteTicket() {
+		global $cfg;
+		$sentlist = array();
+		//check send email
+		if($cfg->alertONDeleteTicket()) {
+			//Admin
+			if ($cfg->alertAdminONDeleteTicket() && $cfg->getAdminEmail()) {
+				array_push($sentlist, $cfg->getAdminEmail());
+			}
+			
+			//Departments
+			if ($cfg->alertDeptONDeleteTicket()) {
+				foreach($this->getEmails() as $email) {
+					//avoid duplicate emails
+					if (!in_array($email->getEmail(), $sentlist)) {
+						array_push($sentlist, $email->getEmail());
+					}
+				}
+			}
+			
+			//Managers
+			if ($cfg->alertDeptManagerONDeleteTicket() && $this->getDeptManagers()) {
+				foreach($this->getDeptManagers() as $staff) {
+					//avoid duplicate emails
+					if (!in_array($staff->getEmail(), $sentlist)) {
+						array_push($sentlist, $staff);
+					}
+				}
+			}
+			
+			//Members
+			if ($cfg->alertDeptMembersONDeleteTicket() && $this->getDeptMembers()) {
+				foreach($this->getDeptMembers() as $staff) {
+					//avoid duplicate emails
+					if (!in_array($staff->getEmail(), $sentlist)) {
+						array_push($sentlist, $staff->getEmail());
+					}
+				}
+			}
+		}
+		
+		return $sentlist;
+	}
+	
+	//get list email of recipients on new note
+	function getListEmailOfRecipientsOnNewNote() {
+		global $cfg;
+		$sentlist = array();
+		
+		//check send email
+		if($cfg->alertONNewNote()) {
+			//Last respondent.
+			if ($cfg->alertLastRespondentONNewNote() && $this->getLastRespondent()) {
+				$staff = $this->getLastRespondent();
+				array_push($sentlist, $staff->getEmail());
+			}
+			
+			//Assigned staff if any...could be the last respondent
+			if ($cfg->alertAssignedONNewNote() && $this->isAssigned()) {
+				$staff = $this->getStaff();
+				//avoid duplicate emails
+				if(!in_array($staff->getEmail(), $sentlist)) {
+					array_push($sentlist, $staff->getEmail());
+				}
+			}
+			
+			//Departments
+			if ($cfg->alertDeptONNewNote() && $this->getEmails()) {
+				foreach($this->getEmails() as $email) {
+					//avoid duplicate emails
+					if (!in_array($email->getEmail(), $sentlist)) {
+						array_push($sentlist, $email->getEmail());
+					}
+				}
+			}
+			
+			//Managers
+			if ($cfg->alertDeptManagerONNewNote() && $this->getDeptManagers()) {
+				foreach($this->getDeptManagers() as $staff) {
+					//avoid duplicate emails
+					if (!in_array($staff->getEmail(), $sentlist)) {
+						array_push($sentlist, $staff);
+					}
+				}
+			}
+		}
+		
+		return $sentlist;
+	}	
+	
+	//get list email of recipients on new message
+	function getListEmailOfRecipientsONNewMessage() {
+		global $cfg;
+		$sentlist = array();
+		
+		//check send email
+		if($cfg->alertONNewNote()) {
+			//Last respondent.
+			if ($cfg->alertLastRespondentONNewMessage() && $this->getLastRespondent()) {
+				$staff = $this->getLastRespondent();
+				array_push($sentlist, $staff->getEmail());
+			}
+			
+			//Assigned staff if any...could be the last respondent
+			if ($cfg->alertAssignedONNewMessage() && $this->isAssigned()) {
+				$staff = $this->getStaff();
+				//avoid duplicate emails
+				if(!in_array($staff->getEmail(), $sentlist)) {
+					array_push($sentlist, $staff->getEmail());
+				}
+			}
+			
+			//Departments
+			if ($cfg->alertDeptONNewMessage() && $this->getEmails()) {
+				foreach($this->getEmails() as $email) {
+					//avoid duplicate emails
+					if (!in_array($email->getEmail(), $sentlist)) {
+						array_push($sentlist, $email->getEmail());
+					}
+				}
+			}
+			
+			//Managers
+			if ($cfg->alertDeptManagerONNewMessage() && $this->getDeptManagers()) {
+				foreach($this->getDeptManagers() as $staff) {
+					//avoid duplicate emails
+					if (!in_array($staff->getEmail(), $sentlist)) {
+						array_push($sentlist, $staff);
+					}
+				}
+			}
+		}
+		
+		return $sentlist;
+	}
+	
+	//get list email of recipients on overdue ticket
+	function getListEmailOfRecipientsOnOverdueTicket() {
+		global $cfg;
+		$sentlist = array();
+		
+		//check send email
+		if($cfg->alertONOverdueTicket()) {
+			//Assigned staff
+			if ($cfg->alertAssignedONNewNote() && $this->isAssigned()) {
+				$staff = $this->getStaff();
+				array_push($sentlist, $staff->getEmail());
+			}
+			
+			//Departments
+			if ($cfg->alertDeptONOverdueTicket()) {
+				foreach($this->getEmails() as $email) {
+					//avoid duplicate emails
+					if (!in_array($email->getEmail(), $sentlist)) {
+						array_push($sentlist, $email->getEmail());
+					}
+				}
+			}
+			
+			//Managers
+			if ($cfg->alertDeptManagerONOverdueTicket()) {
+				foreach($this->getDeptManagers() as $staff) {
+					//avoid duplicate emails
+					if (!in_array($staff->getEmail(), $sentlist)) {
+						array_push($sentlist, $staff);
+					}
+				}
+			}
+			
+			//Members
+			if ($cfg->alertDeptMembersONOverdueTicket()) {
+				foreach($this->getDeptMembers() as $staff) {
+					//avoid duplicate emails
+					if (!in_array($staff->getEmail(), $sentlist)) {
+						array_push($sentlist, $staff->getEmail());
+					}
+				}
+			}
+		}
+		
+		return $sentlist;
+	}
+	
     //Replace base variables.
     function replaceTemplateVars($text) {
         global $cfg;
@@ -665,37 +935,12 @@ class Ticket {
 					$body = $this->replaceTemplateVars($body);
 					$subj = $this->replaceTemplateVars($subj);
 					
-					//Fire and email to admin. No questions asked.
-					$alert = str_replace("%staff", 'Admin', $body);
-					$fromEmail->send($cfg->getAdminEmail(), $subj, $alert);
-
-					/* * * Build list of recipients and fire the alerts ** */
-					$recipients = array();
-					//Assigned staff... if any
-					if ($this->isAssigned() && $cfg->alertAssignedONOverdueTicket()) {
-						array_push($recipients, $this->getStaff());
-					} elseif ($cfg->alertDeptMembersONOverdueTicket()) { //Alert assigned or dept members not both
-						array_push($recipients, $this->getDeptMembers());
-					}
-					//Always blame the manager
-					if ($cfg->alertDeptManagerONOverdueTicket()) {
-						array_push($recipients, $this->getDeptManagers());
-					}
-					//Ok...we are ready to go....
-					$sentlist = array();
-					foreach ($recipients as $staff) {
-						if (!$staff || !is_object($staff) || !$staff->isAvailable())
-							continue;
-						if (in_array($staff->getEmail(), $sentlist))
-							continue; //avoid duplicate emails.
-						$alert = str_replace("%staff", $staff->getFirstName(), $body);
-						$fromEmail->send($staff->getEmail(), $subj, $alert);
-						array_push($sentlist, $staff->getEmail());
-					}
+					//list email
+					$sentlist = $this->getListEmailOfRecipientsOnOverdueTicket();
 					
-					//send email to department
-					foreach($this->getEmails() as $email){
-						$fromEmail->send($email->getEmail(), $subj, $body);
+					//send email
+					foreach($sentlist as $email){
+						$fromEmail->send($email, $subj, $body);
 					}
 				}else {
 					Sys::log(LOG_WARNING, 'Template Fetch Error', "Unable to fetch 'overdue' alert template #$tplId");
@@ -741,8 +986,7 @@ class Ticket {
 				$sql = 'SELECT assigned_alert_subj,assigned_alert_body FROM ' . EMAIL_TEMPLATE_TABLE .
 						' WHERE cfg_id=' . db_input($cfg->getId()) . ' AND tpl_id=' . db_input($tplId);
 				if (($resp = db_query($sql)) && db_num_rows($resp) 
-					&& list($subj, $body) = db_fetch_row($resp)
-					&& $fromEmail && $fromEmail->getId()) {
+					&& list($subj, $body) = db_fetch_row($resp) && $fromEmail) {
 					$body = $this->replaceTemplateVars($body);
 					$subj = $this->replaceTemplateVars($subj);
 					
@@ -827,7 +1071,7 @@ class Ticket {
 					$autorespond = false;
 				
 				//TODO: check how many messages haven't been answered...
-				//If enabled...send confirmation to user. ( New Message AutoResponse)
+				//If enabled...send confirmation to user. (New Message AutoResponse)
 				if ($autorespond && $cfg->autoRespONNewMessage()) {
 					$sql = 'SELECT message_autoresp_subj,message_autoresp_body FROM ' . EMAIL_TEMPLATE_TABLE .
 							' WHERE cfg_id=' . db_input($cfg->getId()) . ' AND tpl_id=' . db_input($tplId);
@@ -846,7 +1090,7 @@ class Ticket {
 					}
 				}
 				
-				//If enabled...send alert to staff (New Message Alert)
+				//If enabled...send alert (New Message Alert)
 				if ($cfg->alertONNewMessage()) {
 					$sql = 'SELECT message_alert_subj,message_alert_body FROM ' . EMAIL_TEMPLATE_TABLE .
 							' WHERE cfg_id=' . db_input($cfg->getId()) . ' AND tpl_id=' . db_input($tplId);
@@ -858,34 +1102,12 @@ class Ticket {
 						$subj = $this->replaceTemplateVars($subj);
 						$body = str_replace("%message", $msg, $body);
 						
-						//send mail to department
-						foreach ($this->getEmails() as $email) {
-							$fromEmail->send($email->getEmail(), $subj, $body);
-						}
-
-						//Build list of recipients and fire the alerts.
-						$recipients = array();
-						//Last respondent.
-						if ($cfg->alertLastRespondentONNewMessage() || $cfg->alertAssignedONNewMessage())
-							array_push($recipients, $this->getLastRespondent());
-						//Assigned staff if any...could be the last respondent
-						if ($this->isAssigned())
-							array_push($recipients, $this->getStaff());
-						//Dept manager
-						if ($cfg->alertDeptManagerONNewMessage())
-							array_push($recipients[], $this->getDeptManagers());
-
-						//Baby we are ready...take me
-						$sentlist = array(); //I know it sucks...but..it works.
-						foreach ($recipients as $staff) {
-							//TODO: log error messages.
-							if (!$staff || !is_object($staff) || !$staff->getEmail() || !$staff->isAvailable())
-								continue;
-							if (in_array($staff->getEmail(), $sentlist))
-								continue; //avoid duplicate emails.
-							$alert = str_replace("%staff", $staff->getFirstName(), $body);
-							$fromEmail->send($staff->getEmail(), $subj, $alert);
-							array_push($sentlist, $staff->getEmail());
+						//list email
+						$sentlist = $this->getListEmailOfRecipientsONNewMessage();
+						
+						//send email
+						foreach($sentlist as $email) {
+							$fromEmail->send($email, $subj, $body);
 						}
 					}else {
 						Sys::log(LOG_WARNING, 'Template Fetch Error', "Unable to fetch 'new message' alert template #$tplId");
@@ -898,10 +1120,10 @@ class Ticket {
 
     //Insert Staff Reply
     function postResponse($msgid, $response, $signature = 'none', $attachment = false, $canalert = true) {
-        global $thisuser, $cfg;
+        global $thisuser,$cfg;
         if (!$thisuser || !$thisuser->getId() || !$thisuser->isStaff()) //just incase
             return 0;
-
+		
         $sql = 'INSERT INTO ' . TICKET_RESPONSE_TABLE . ' SET created=NOW() ' .
                 ',ticket_id=' . db_input($this->getId()) .
                 ',msg_id=' . db_input($msgid) .
@@ -932,19 +1154,20 @@ class Ticket {
 				if (($attachment && is_file($attachment['tmp_name'])) && $cfg->emailAttachments()) {
 					$file = array('file' => $attachment['tmp_name'], 'name' => $attachment['name'], 'type' => $attachment['type']);
 				}
-
+				echo $fromEmail;
 				if ($cfg->stripQuotedReply() && ($tag = $cfg->getReplySeparator()))
 					$body = "\n$tag\n\n" . $body;
 				
-				if($this->getEmail()) {
-					$fromEmail->send($this->getEmail(), $subj, $body, $file);
+				echo 'begin send email';
+				//list email
+				$sentlist = $this->getListEmailOfRecipientsONNewMessage();
+				//avoid duplicate email
+				if(!in_array($this->getEmail(), $sentlist)){
+					array_push($sentlist, $this->getEmail());
 				}
-				
-				// send mail to department
-				foreach($this->getEmails() as $email) {
-					if ($fromEmail && $fromEmail->getId()) {
-						$fromEmail->send($email->getEmail(), $subj, $body, $file);
-					}
+				//send email
+				foreach($sentlist as $email) {
+					$fromEmail->send($email, $subj, $body, $file);
 				}
 			} else {
 				//We have a big problem...alert admin...
@@ -977,9 +1200,9 @@ class Ticket {
                 ',note=' . db_input(Format::striptags($note)) .
                 ',staff_id=' . db_input($thisuser ? $thisuser->getId() : 0) .
                 ',source=' . db_input(($poster || !$thisuser) ? $poster : $thisuser->getName());
-        //echo $sql;
+        
         if (db_query($sql) && ($id = db_insert_id())) {			
-            //If enabled...send alert to staff (Internal Note Alert)
+            //If enabled...send alert (Internal Note Alert)
             if ($alert && $cfg->alertONNewNote()) {
 				$tplId = $cfg->getDefaultTemplateId();
 				$fromEmail = $cfg->getAlertEmail() ? $cfg->getAlertEmail() : $cfg->getDefaultEmail();
@@ -992,33 +1215,12 @@ class Ticket {
                     $subj = $this->replaceTemplateVars($subj);
                     $body = str_replace('%note', "$title\n\n$note", $body);
 					
-					// send email to department
-					foreach($this->getEmails() as $email) {
-						$fromEmail->send($email->getEmail(), $subj, $body); 
-					}
-
-					//Build list of recipients and fire the alerts.
-					$recipients = array();
-					//Last respondent.
-					if ($cfg->alertLastRespondentONNewNote() || $cfg->alertAssignedONNewNote())
-						array_push($recipients, $this->getLastRespondent());
-					//Assigned staff if any...could be the last respondent
-					if ($this->isAssigned())
-						array_push($recipients, $this->getStaff());
-					//Dept manager
-					if ($cfg->alertDeptManagerONNewNote())
-						array_push($recipients, $this->getDeptManagers());
-
-					$sentlist = array(); //I know it sucks...but..it works.
-					foreach ($recipients as $staff) {
-						//TODO: log error messages.
-						if (!$staff || !is_object($staff) || !$staff->getEmail() || !$staff->isAvailable())
-							continue;
-						if (in_array($staff->getEmail(), $sentlist) || ($thisuser && $thisuser->getId() == $staff->getId()))
-							continue;
-						$alert = str_replace('%staff', $staff->getFirstName(), $body);
-						$fromEmail->send($staff->getEmail(), $subj, $alert);
-						array_push($sentlist, $staff->getEmail());
+					//list email
+					$sentlist = $this->getListEmailOfRecipientsOnNewNote();
+					
+					// send email
+					foreach($sentlist as $email) {
+						$fromEmail->send($email, $subj, $body); 
 					}
                 }else {
                     Sys::log(LOG_WARNING, 'Template Fetch Error', "Unable to fetch 'new note' alert template #$tplId");
@@ -1107,11 +1309,11 @@ class Ticket {
 
     function delete() {
 		global $cfg;
-		
-		$emails = $this->getEmails();
 		//get email template
 		$tplId = $cfg->getDefaultTemplateId();
 		$fromEmail = $cfg->getAlertEmail() ? $cfg->getAlertEmail() : $cfg->getDefaultEmail();
+		//list email
+		$sentlist = $this->getListEmailOfRecipientsOnDeleteTicket();
 		
         if (db_query('DELETE FROM ' . TICKET_TABLE . ' WHERE ticket_id=' . $this->getId()) && db_affected_rows()):
             db_query('DELETE FROM ' . TICKET_DEPARTMENT_TABLE .' WHERE ticket_id=' . $this->getId());
@@ -1128,16 +1330,16 @@ class Ticket {
 				$body = $this->replaceTemplateVars($body);
 				$subj = $this->replaceTemplateVars($subj);
 				
-				// send email to department.
-				foreach($emails as $email){
-					$fromEmail->send($email->getEmail(), $subj, $body);
+				//send email
+				foreach($sentlist as $email){
+					$fromEmail->send($email, $subj, $body);
 				}
 			}
 			
             return TRUE;
         endif;
 
-        return TRUE;
+        return FALSE;
     }
 	
     function fixAttachments() {
@@ -1465,8 +1667,9 @@ class Ticket {
 					if ($cfg->stripQuotedReply() && ($tag = trim($cfg->getReplySeparator())))
 						$body = "\n$tag\n\n" . $body;
 					
-					foreach($this->getEmails() as $email){
-						$fromEmail->send($email->getEmail(), $subj, $body, $file);
+					$sentlist = $this->getListEmailOfRecipientsOnDeleteTicket();
+					foreach($sentlist as $email){
+						$fromEmail->send($email, $subj, $body, $file);
 					}
 				} else {
 					//We have a big problem...alert admin...
@@ -1759,7 +1962,7 @@ class Ticket {
 				db_query('INSERT INTO '.TICKET_DEPARTMENT_TABLE.' SET ticket_id='.db_input($id).',dept_id='.db_input($deptId));
 			}
 			
-			//If enabled...send alert to staff (New Ticket Alert)
+			//If enabled...send alert (New Ticket Alert)
 			if ($alertstaff && $cfg->alertONNewTicket() && is_object($ticket)) {
 				$sql = 'SELECT ticket_alert_subj,ticket_alert_body FROM ' . EMAIL_TEMPLATE_TABLE .
 						' WHERE cfg_id=' . db_input($cfg->getId()) . ' AND tpl_id=' . db_input($tplId);
@@ -1769,37 +1972,11 @@ class Ticket {
 					$subj = $ticket->replaceTemplateVars($subj);
 					$body = str_replace('%message', ($var['issue'] ? $var['issue'] : $var['message']), $body);
 					
-					$sentlist = array();
-					//Department Alert.
-					foreach($ticket->getEmails() as $email) {
-						$fromEmail->send($email->getEmail(), $subj, $body);
-						array_push($sentlist, $email->getEmail());
-					}
-					
-					//Admin Alert.
-					if ($cfg->alertAdminONNewTicket()) {
-						$alert = str_replace("%staff", 'Admin', $body);
-						$fromEmail->send($cfg->getAdminEmail(), $subj, $alert);
-						array_push($sentlist, $cfg->getAdminEmail());
-					}
-					//get the list
-					$recipients = array();
-					//Dept. Manager
-					if ($cfg->alertDeptManagerONNewTicket()) {
-						array_push($recipients, $ticket->getDeptManagers());
-					}
-					//Staff members
-					if ($cfg->alertDeptMembersONNewTicket()) {
-						array_push($recipients, $ticket->getDeptMembers()); 
-					}
-					foreach ($recipients as $staff) {
-						if (!$staff || !is_object($staff) || !$staff->isAvailable())
-							continue;
-						if (in_array($staff->getEmail(), $sentlist))
-							continue; //avoid duplicate emails.
-						$alert = str_replace("%staff", $staff->getFirstName(), $body);
-						$fromEmail->send($staff->getEmail(), $subj, $alert);
-						array_push($sentlist, $staff->getEmail());
+					//list email
+					$sentlist = $ticket->getListEmailOfRecipientsOnNewTicket();
+					//send email
+					foreach($sentlist as $email) {
+						$fromEmail->send($email, $subj, $body);
 					}
 				}else {
 					Sys::log(LOG_WARNING, 'Template Fetch Error', "Unable to fetch 'new ticket' alert template #$tplId");
@@ -1855,7 +2032,6 @@ class Ticket {
 
 						if ($cfg->stripQuotedReply() && ($tag = trim($cfg->getReplySeparator())))
 							$body = "\n$tag\n\n" . $body;
-						
 						$fromEmail->send($ticket->getEmail(), $subj, $body, $file);
 					} else {
 						//We have a big problem...alert admin...
@@ -1872,9 +2048,9 @@ class Ticket {
             }
             //post create actions
             if ($var['staffId']) { //Assign ticket to staff if any. (internal note as message)
-                $ticket->assignStaff($var['staffId'], $var['note'], (isset($var['alertstaff'])));
+                //$ticket->assignStaff($var['staffId'], $var['note'], (isset($var['alertstaff'])));
             } elseif ($var['note']) { //Not assigned...save optional note if any
-                $ticket->postNote('New Ticket', $var['note'], false);
+                //$ticket->postNote('New Ticket', $var['note'], false);
             } else { //Not assignment and no internal note - log activity 
                 $ticket->logActivity('New Ticket by Staff', 'Ticket created by staff -' . $thisuser->getName());
             }

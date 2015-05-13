@@ -479,7 +479,7 @@ $templates=db_query('SELECT tpl_id,name FROM '.EMAIL_TEMPLATE_TABLE.' WHERE cfg_
               <input type="checkbox" name="message_alert_laststaff" <?=$config['message_alert_laststaff']?'checked':''?>> Last Respondent
               <input type="checkbox" name="message_alert_assigned" <?=$config['message_alert_assigned']?'checked':''?>> Assigned Staff
               <input type="checkbox" name="message_alert_dept" <?=$config['message_alert_dept']?'checked':''?>> Department Email
-			  <input type="checkbox" name="message_alert_dept_manager" <?=$config['message_alert_dept_manager']?'checked':''?>> Department Manager (spammy)
+			  <input type="checkbox" name="message_alert_dept_manager" <?=$config['message_alert_dept_manager']?'checked':''?>> Department Manager
             </td>
         </tr>
         <tr><th valign="top">New Internal Note Alert:</th>
@@ -490,7 +490,7 @@ $templates=db_query('SELECT tpl_id,name FROM '.EMAIL_TEMPLATE_TABLE.' WHERE cfg_
               <input type="checkbox" name="note_alert_laststaff" <?=$config['note_alert_laststaff']?'checked':''?>> Last Respondent
               <input type="checkbox" name="note_alert_assigned" <?=$config['note_alert_assigned']?'checked':''?>> Assigned Staff
               <input type="checkbox" name="note_alert_dept" <?=$config['note_alert_dept']?'checked':''?>> Department Email
-			  <input type="checkbox" name="note_alert_dept_manager" <?=$config['note_alert_dept_manager']?'checked':''?>> Department Manager (spammy)
+			  <input type="checkbox" name="note_alert_dept_manager" <?=$config['note_alert_dept_manager']?'checked':''?>> Department Manager
             </td>
         </tr>
         <tr><th valign="top">Overdue Ticket Alert:</th>
