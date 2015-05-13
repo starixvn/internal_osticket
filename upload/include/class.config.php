@@ -314,39 +314,8 @@ class Config {
     function notifyONNewStaffTicket(){
         return $this->config['ticket_notice_active']?true:false;
     }
-
-    function alertONNewMessage() {
-        return $this->config['message_alert_active']?true:false;
-    }
-
-    function alertLastRespondentONNewMessage() {
-        return $this->config['message_alert_laststaff']?true:false;
-    }
-   
-    function alertAssignedONNewMessage() {
-        return $this->config['message_alert_assigned']?true:false;
-    }
-    
-    function alertDeptManagerONNewMessage() {
-        return $this->config['message_alert_dept_manager']?true:false;
-    }
-
-    function alertONNewNote() {
-        return $this->config['note_alert_active']?true:false;
-    }
-
-    function alertLastRespondentONNewNote() {
-        return $this->config['note_alert_laststaff']?true:false;
-    }
-
-    function alertAssignedONNewNote() {
-        return $this->config['note_alert_assigned']?true:false;
-    }
-
-    function alertDeptManagerONNewNote() {
-        return $this->config['note_alert_dept_manager']?true:false;
-    }
-
+	
+	/*alert on new ticket*/
     function alertONNewTicket() {
         return $this->config['ticket_alert_active']?true:false;
     }
@@ -354,6 +323,10 @@ class Config {
     function alertAdminONNewTicket() {
         return $this->config['ticket_alert_admin']?true:false;
     }
+	
+	function alertDeptOnNewTicket() {
+		return $this->config['ticket_alert_dept'] ? true : false;
+	}
      
     function alertDeptManagerONNewTicket() {
         return $this->config['ticket_alert_dept_manager']?true:false;
@@ -362,7 +335,92 @@ class Config {
     function alertDeptMembersONNewTicket() {
         return $this->config['ticket_alert_dept_members']?true:false;
     }
+	
+	/*alert on update ticket*/
+	function alertONUpdateTicket() {
+		return $this->config['update_ticket_alert_active'] ? true : false;
+	}
+	
+	function alertAdminONUpdateTicket() {
+		return $this->config['update_ticket_alert_admin'] ? true : false;
+	}
+	
+	function alertDeptONUpdateTicket() {
+		return $this->config['update_ticket_alert_dept'] ? true : false;
+	}
+	
+	function alertDeptManagerONUpdateTicket() {
+		return $this->config['update_ticket_alert_dept_manager'] ? true : false;
+	}
+	
+	function alertDeptMembersONUpdateTicket() {
+		return $this->config['update_ticket_alert_dept_members'] ? true : false;
+	}
+	
+	/*alert on delete ticket*/
+	function alertONDeleteTicket() {
+		return $this->config['delete_ticket_alert_active'] ? true : false;
+	}
+	
+	function alertAdminONDeleteTicket() {
+		return $this->config['delete_ticket_alert_admin'] ? true : false;
+	}
+	
+	function alertDeptONDeleteTicket() {
+		return $this->config['delete_ticket_alert_dept'] ? true : false;
+	}
+	
+	function alertDeptManagerONDeleteTicket() {
+		return $this->config['delete_ticket_alert_dept_manager'] ? true : false;
+	}
+	
+	function alertDeptMembersONDeleteTicket() {
+		return $this->config['delete_ticket_alert_dept_members'] ? true : false;
+	}
+	
+	/*alert on new message*/
+    function alertONNewMessage() {
+        return $this->config['message_alert_active'] ? true : false;
+    }
 
+    function alertLastRespondentONNewMessage() {
+        return $this->config['message_alert_laststaff'] ? true : false;
+    }
+   
+    function alertAssignedONNewMessage() {
+        return $this->config['message_alert_assigned'] ? true : false;
+    }
+    
+	function alertDeptONNewMessage() {
+		return $this->config['message_alert_dept'] ? true : false;
+	}
+	
+    function alertDeptManagerONNewMessage() {
+        return $this->config['message_alert_dept_manager'] ? true : false;
+    }
+	
+	/*alert on new note*/
+    function alertONNewNote() {
+        return $this->config['note_alert_active'] ? true : false;
+    }
+
+    function alertLastRespondentONNewNote() {
+        return $this->config['note_alert_laststaff'] ? true : false;
+    }
+
+    function alertAssignedONNewNote() {
+        return $this->config['note_alert_assigned'] ? true : false;
+    }
+
+	function alertDeptONNewNote() {
+        return $this->config['note_alert_dept'] ? true : false;
+    }
+	
+    function alertDeptManagerONNewNote() {
+        return $this->config['note_alert_dept_manager'] ? true : false;
+    }
+	
+	/*alert on overdue ticket*/
     function alertONOverdueTicket() {
         return $this->config['overdue_alert_active']?true:false;
     }
@@ -370,7 +428,11 @@ class Config {
     function alertAssignedONOverdueTicket() {
         return $this->config['overdue_alert_assigned']?true:false;
     }
-
+	
+	function alertDeptONOverdueTicket() {
+        return $this->config['overdue_alert_dept']?true:false;
+    }
+	
     function alertDeptManagerONOverdueTicket() {
         return $this->config['overdue_alert_dept_manager']?true:false;
     }
@@ -409,9 +471,7 @@ class Config {
 
     function alertONMailParseError() {
         return $this->config['send_mailparse_errors']?true:false;
-    }
-
-    
+    }    
 
     /* Attachments */
 
@@ -512,9 +572,6 @@ class Config {
         if(!$errors['admin_email'] && Email::getIdByEmail($var['admin_email'])) //Make sure admin email is not also a system email.
             $errors['admin_email']='Email already setup as system email';
 
-
-
-
         if($errors) return false; //No go! 
 
         //We are good to go...blanket update!
@@ -556,27 +613,41 @@ class Config {
             ',ticket_autoresponder='.db_input($var['ticket_autoresponder']).
             ',message_autoresponder='.db_input($var['message_autoresponder']).
             ',ticket_notice_active='.db_input($var['ticket_notice_active']).
+            ',overlimit_notice_active='.db_input($var['overlimit_notice_active']).
             ',ticket_alert_active='.db_input($var['ticket_alert_active']).
             ',ticket_alert_admin='.db_input(isset($var['ticket_alert_admin'])?1:0).
+			',ticket_alert_dept='.db_input(isset($var['ticket_alert_dept'])?1:0).
             ',ticket_alert_dept_manager='.db_input(isset($var['ticket_alert_dept_manager'])?1:0).
             ',ticket_alert_dept_members='.db_input(isset($var['ticket_alert_dept_members'])?1:0).
+			',update_ticket_alert_active='.db_input($var['update_ticket_alert_active']).
+			',update_ticket_alert_admin='.db_input(isset($var['update_ticket_alert_admin'])?1:0).
+			',update_ticket_alert_dept='.db_input(isset($var['update_ticket_alert_dept'])?1:0).
+            ',update_ticket_alert_dept_manager='.db_input(isset($var['update_ticket_alert_dept_manager'])?1:0).
+            ',update_ticket_alert_dept_members='.db_input(isset($var['update_ticket_alert_dept_members'])?1:0).
+			',delete_ticket_alert_active='.db_input($var['delete_ticket_alert_active']).
+            ',delete_ticket_alert_admin='.db_input(isset($var['delete_ticket_alert_admin'])?1:0).
+			',delete_ticket_alert_dept='.db_input(isset($var['delete_ticket_alert_dept'])?1:0).
+            ',delete_ticket_alert_dept_manager='.db_input(isset($var['delete_ticket_alert_dept_manager'])?1:0).
+            ',delete_ticket_alert_dept_members='.db_input(isset($var['delete_ticket_alert_dept_members'])?1:0).
             ',message_alert_active='.db_input($var['message_alert_active']).
             ',message_alert_laststaff='.db_input(isset($var['message_alert_laststaff'])?1:0).
             ',message_alert_assigned='.db_input(isset($var['message_alert_assigned'])?1:0).
+			',message_alert_dept='.db_input(isset($var['message_alert_dept'])?1:0).
             ',message_alert_dept_manager='.db_input(isset($var['message_alert_dept_manager'])?1:0).
             ',note_alert_active='.db_input($var['note_alert_active']).
             ',note_alert_laststaff='.db_input(isset($var['note_alert_laststaff'])?1:0).
             ',note_alert_assigned='.db_input(isset($var['note_alert_assigned'])?1:0).
+			',note_alert_dept='.db_input(isset($var['note_alert_dept'])?1:0).
             ',note_alert_dept_manager='.db_input(isset($var['note_alert_dept_manager'])?1:0).
             ',overdue_alert_active='.db_input($var['overdue_alert_active']).
             ',overdue_alert_assigned='.db_input(isset($var['overdue_alert_assigned'])?1:0).
+			',overdue_alert_dept='.db_input(isset($var['overdue_alert_dept'])?1:0).
             ',overdue_alert_dept_manager='.db_input(isset($var['overdue_alert_dept_manager'])?1:0).
             ',overdue_alert_dept_members='.db_input(isset($var['overdue_alert_dept_members'])?1:0).
             ',auto_assign_reopened_tickets='.db_input(isset($var['auto_assign_reopened_tickets'])?1:0).
             ',show_assigned_tickets='.db_input(isset($var['show_assigned_tickets'])?1:0).
             ',show_answered_tickets='.db_input(isset($var['show_answered_tickets'])?1:0).
             ',hide_staff_name='.db_input(isset($var['hide_staff_name'])?1:0).
-            ',overlimit_notice_active='.db_input($var['overlimit_notice_active']).
             ',random_ticket_ids='.db_input($var['random_ticket_ids']).
             ',time_format='.db_input($var['time_format']).
             ',date_format='.db_input($var['date_format']).

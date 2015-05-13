@@ -1835,8 +1835,8 @@ class Ticket {
                 $ticket->markUnAnswered();
                 //Send Notice to user --- if requested AND enabled!!
                 if ($cfg->notifyONNewStaffTicket() && isset($var['alertuser'])) {
+					$fromEmail = $cfg->getAlertEmail() ? $cfg->getAlertEmail() : $cfg->getDefaultEmail();
 					$tplId = $cfg->getDefaultTemplateId();
-					$fromEmail = $cfg->getDefaultEmail();
 					
 					$sql = 'SELECT ticket_notice_subj,ticket_notice_body FROM ' . EMAIL_TEMPLATE_TABLE .
 							' WHERE cfg_id=' . db_input($cfg->getId()) . ' AND tpl_id=' . db_input($tplId);
@@ -1856,7 +1856,7 @@ class Ticket {
 						if ($cfg->stripQuotedReply() && ($tag = trim($cfg->getReplySeparator())))
 							$body = "\n$tag\n\n" . $body;
 						
-						$fromEmail->send($this->getEmail(), $subj, $body, $file);
+						$fromEmail->send($ticket->getEmail(), $subj, $body, $file);
 					} else {
 						//We have a big problem...alert admin...
 						$msg = 'Problems fetching response template for ticket#' . $ticket->getId() . ' Possible config error - template #' . $tplId;

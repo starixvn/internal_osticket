@@ -444,8 +444,31 @@ $templates=db_query('SELECT tpl_id,name FROM '.EMAIL_TEMPLATE_TABLE.' WHERE cfg_
                 <input type="radio" name="ticket_alert_active"  value="0"   <?=!$config['ticket_alert_active']?'checked':''?> />Disable
                 <br><i>Select recipients</i>&nbsp;<font class="error">&nbsp;<?=$errors['ticket_alert_active']?></font><br>
                 <input type="checkbox" name="ticket_alert_admin" <?=$config['ticket_alert_admin']?'checked':''?>> Admin Email
+				<input type="checkbox" name="ticket_alert_dept" <?=$config['ticket_alert_dept']?'checked':''?>> Department Email
                 <input type="checkbox" name="ticket_alert_dept_manager" <?=$config['ticket_alert_dept_manager']?'checked':''?>> Department Manager
                 <input type="checkbox" name="ticket_alert_dept_members" <?=$config['ticket_alert_dept_members']?'checked':''?>> Department Members (spammy)
+            </td>
+        </tr>
+		<tr><th valign="top">Update Ticket Alert:</th>
+            <td>
+                <input type="radio" name="update_ticket_alert_active"  value="1"   <?=$config['update_ticket_alert_active']?'checked':''?> />Enable
+                <input type="radio" name="update_ticket_alert_active"  value="0"   <?=!$config['update_ticket_alert_active']?'checked':''?> />Disable
+                <br><i>Select recipients</i>&nbsp;<font class="error">&nbsp;<?=$errors['update_ticket_alert_active']?></font><br>
+                <input type="checkbox" name="update_ticket_alert_admin" <?=$config['update_ticket_alert_admin']?'checked':''?>> Admin Email
+				<input type="checkbox" name="update_ticket_alert_dept" <?=$config['update_ticket_alert_dept']?'checked':''?>> Department Email
+                <input type="checkbox" name="update_ticket_alert_dept_manager" <?=$config['update_ticket_alert_dept_manager']?'checked':''?>> Department Manager
+                <input type="checkbox" name="update_ticket_alert_dept_members" <?=$config['update_ticket_alert_dept_members']?'checked':''?>> Department Members (spammy)
+            </td>
+        </tr>
+		<tr><th valign="top">Delete Ticket Alert:</th>
+            <td>
+                <input type="radio" name="delete_ticket_alert_active"  value="1"   <?=$config['delete_ticket_alert_active']?'checked':''?> />Enable
+                <input type="radio" name="delete_ticket_alert_active"  value="0"   <?=!$config['delete_ticket_alert_active']?'checked':''?> />Disable
+                <br><i>Select recipients</i>&nbsp;<font class="error">&nbsp;<?=$errors['delete_ticket_alert_active']?></font><br>
+                <input type="checkbox" name="delete_ticket_alert_admin" <?=$config['delete_ticket_alert_admin']?'checked':''?>> Admin Email
+				<input type="checkbox" name="delete_ticket_alert_dept" <?=$config['delete_ticket_alert_dept']?'checked':''?>> Department Email
+                <input type="checkbox" name="delete_ticket_alert_dept_manager" <?=$config['delete_ticket_alert_dept_manager']?'checked':''?>> Department Manager
+                <input type="checkbox" name="delete_ticket_alert_dept_members" <?=$config['delete_ticket_alert_dept_members']?'checked':''?>> Department Members (spammy)
             </td>
         </tr>
         <tr><th valign="top">New Message Alert:</th>
@@ -455,7 +478,8 @@ $templates=db_query('SELECT tpl_id,name FROM '.EMAIL_TEMPLATE_TABLE.' WHERE cfg_
               <br><i>Select recipients</i>&nbsp;<font class="error">&nbsp;<?=$errors['message_alert_active']?></font><br>
               <input type="checkbox" name="message_alert_laststaff" <?=$config['message_alert_laststaff']?'checked':''?>> Last Respondent
               <input type="checkbox" name="message_alert_assigned" <?=$config['message_alert_assigned']?'checked':''?>> Assigned Staff
-              <input type="checkbox" name="message_alert_dept_manager" <?=$config['message_alert_dept_manager']?'checked':''?>> Department Manager (spammy)
+              <input type="checkbox" name="message_alert_dept" <?=$config['message_alert_dept']?'checked':''?>> Department Email
+			  <input type="checkbox" name="message_alert_dept_manager" <?=$config['message_alert_dept_manager']?'checked':''?>> Department Manager (spammy)
             </td>
         </tr>
         <tr><th valign="top">New Internal Note Alert:</th>
@@ -465,7 +489,8 @@ $templates=db_query('SELECT tpl_id,name FROM '.EMAIL_TEMPLATE_TABLE.' WHERE cfg_
               <br><i>Select recipients</i>&nbsp;<font class="error">&nbsp;<?=$errors['note_alert_active']?></font><br>
               <input type="checkbox" name="note_alert_laststaff" <?=$config['note_alert_laststaff']?'checked':''?>> Last Respondent
               <input type="checkbox" name="note_alert_assigned" <?=$config['note_alert_assigned']?'checked':''?>> Assigned Staff
-              <input type="checkbox" name="note_alert_dept_manager" <?=$config['note_alert_dept_manager']?'checked':''?>> Department Manager (spammy)
+              <input type="checkbox" name="note_alert_dept" <?=$config['note_alert_dept']?'checked':''?>> Department Email
+			  <input type="checkbox" name="note_alert_dept_manager" <?=$config['note_alert_dept_manager']?'checked':''?>> Department Manager (spammy)
             </td>
         </tr>
         <tr><th valign="top">Overdue Ticket Alert:</th>
@@ -474,6 +499,7 @@ $templates=db_query('SELECT tpl_id,name FROM '.EMAIL_TEMPLATE_TABLE.' WHERE cfg_
               <input type="radio" name="overdue_alert_active"  value="0"   <?=!$config['overdue_alert_active']?'checked':''?> />Disable
               <br><i>Admin Email gets an alert by default. Select additional recipients below</i>&nbsp;<font class="error">&nbsp;<?=$errors['overdue_alert_active']?></font><br>
               <input type="checkbox" name="overdue_alert_assigned" <?=$config['overdue_alert_assigned']?'checked':''?>> Assigned Staff
+			  <input type="checkbox" name="overdue_alert_dept" <?=$config['overdue_alert_dept']?'checked':''?>> Department Email
               <input type="checkbox" name="overdue_alert_dept_manager" <?=$config['overdue_alert_dept_manager']?'checked':''?>> Department Manager
               <input type="checkbox" name="overdue_alert_dept_members" <?=$config['overdue_alert_dept_members']?'checked':''?>> Department Members (spammy)
             </td>
