@@ -32,14 +32,14 @@ if(OSTINSTALLED!=TRUE){
 define('SECRET_SALT','A6E924251D58B00');
 
 #Default admin email. Used only on db connection issues and related alerts.
-define('ADMIN_EMAIL','edward.nguyen@nexcel.vn');
+define('ADMIN_EMAIL','quinn.vo@nexcel.vn');
 
 #Mysql Login info
 define('DBTYPE','mysql');
-define('DBHOST','10.19.10.84'); 
+define('DBHOST','10.18.200.114'); 
 define('DBNAME','osticket');
-define('DBUSER','root');
-define('DBPASS','root');
+define('DBUSER','internalteam');
+define('DBPASS','@357$abc^FFZ%');
 /*
 define('DBHOST','10.18.200.204'); 
 define('DBNAME','osticket');
