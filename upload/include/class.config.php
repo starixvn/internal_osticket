@@ -538,24 +538,49 @@ class Config {
         if(!$val->validate($var)){
             $errors=array_merge($errors,$val->errors());                                        
         }
-                        
+        
+		//new ticket
         if($var['ticket_alert_active'] 
-                && (!isset($var['ticket_alert_admin']) 
-                    && !isset($var['ticket_alert_dept_manager'])
-                    && !isset($var['ticket_alert_dept_members']))){        
+			&& (!isset($var['ticket_alert_admin'])
+			&& !isset($var['ticket_alert_dept'])
+			&& !isset($var['ticket_alert_dept_manager'])
+			&& !isset($var['ticket_alert_dept_members']))){        
             $errors['ticket_alert_active']='No target recipient(s) selected';
-        }       
+        }
+		
+		//update ticket
+		if($var['update_ticket_alert_active'] 
+			&& (!isset($var['update_ticket_alert_admin'])
+			&& !isset($var['update_ticket_alert_dept'])
+			&& !isset($var['update_ticket_alert_dept_manager'])
+			&& !isset($var['update_ticket_alert_dept_members']))){        
+            $errors['update_ticket_alert_active']='No target recipient(s) selected';
+        }
+		
+		//delete ticket
+		if($var['delete_ticket_alert_active'] 
+			&& (!isset($var['delete_ticket_alert_admin'])
+			&& !isset($var['delete_ticket_alert_dept'])
+			&& !isset($var['delete_ticket_alert_dept_manager'])
+			&& !isset($var['delete_ticket_alert_dept_members']))){        
+            $errors['delete_ticket_alert_active']='No target recipient(s) selected';
+        }
+		
+		//new message
         if($var['message_alert_active']
-                && (!isset($var['message_alert_laststaff'])
-                    && !isset($var['message_alert_assigned'])
-                    && !isset($var['message_alert_dept_manager']))){
+			&& (!isset($var['message_alert_laststaff'])
+			&& !isset($var['message_alert_assigned'])
+			&& !isset($var['message_alert_dept'])
+			&& !isset($var['message_alert_dept_manager']))){
             $errors['message_alert_active']='No target recipient(s) selected';
         }
-
+		
+		//new note
         if($var['note_alert_active']
-                && (!isset($var['note_alert_laststaff'])
-                    && !isset($var['note_alert_assigned'])
-                    && !isset($var['note_alert_dept_manager']))){
+			&& (!isset($var['note_alert_laststaff'])
+			&& !isset($var['note_alert_assigned'])
+			&& !isset($var['note_alert_dept'])
+			&& !isset($var['note_alert_dept_manager']))){
             $errors['note_alert_active']='No target recipient(s) selected';
         }
 

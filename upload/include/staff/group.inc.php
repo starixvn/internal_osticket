@@ -76,7 +76,7 @@ if($group && $_REQUEST['a']!='new'){
                 &nbsp;&nbsp;<i><b>Mass Close Only:</b> Staff can still close one ticket at a time when set to No</i>
             </td>
         </tr>
-        <tr><th>Can <b>Transfer</b> Tickets</th>
+        <tr style="display: none"><th>Can <b>Transfer</b> Tickets</th>
             <td>
                 <input type="radio" name="can_transfer_tickets"  value="1" <?=$info['can_transfer_tickets']?'checked':''?> />Yes
                 <input type="radio" name="can_transfer_tickets"  value="0" <?=!$info['can_transfer_tickets']?'checked':''?> />No

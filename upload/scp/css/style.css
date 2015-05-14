@@ -606,6 +606,7 @@ table.front_layer input[type="text"].date {
 
 .chzn-container ul.chzn-choices .search-field  .default{
 	width: auto !important;
+	padding: 2px;
 }
 
 .chzn-container .chzn-drop {

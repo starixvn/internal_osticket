@@ -773,7 +773,7 @@ class Ticket {
 		$sentlist = array();
 		
 		//check send email
-		if($cfg->alertONNewNote()) {
+		if($cfg->alertONNewMessage()) {
 			//Last respondent.
 			if ($cfg->alertLastRespondentONNewMessage() && $this->getLastRespondent()) {
 				$staff = $this->getLastRespondent();
@@ -1144,41 +1144,43 @@ class Ticket {
             if (!$canalert) //No alert/response 
                 return $resp_id;
 			
-			$tplId = $cfg->getDefaultTemplateId();
-			$fromEmail = $cfg->getAlertEmail() ? $cfg->getAlertEmail() : $cfg->getDefaultEmail();
-			//Send Response to client...based on the template...
-			//TODO: check department level templates...if set.			
-			$sql = 'SELECT ticket_reply_subj,ticket_reply_body FROM ' . EMAIL_TEMPLATE_TABLE .
-					' WHERE cfg_id=' . db_input($cfg->getId()) . ' AND tpl_id=' . db_input($tplId);
-			if (($resp = db_query($sql)) && db_num_rows($resp) 
-				&& (list($subj, $body) = db_fetch_row($resp)) && $fromEmail) {
-				$body = $this->replaceTemplateVars($body);
-				$subj = $this->replaceTemplateVars($subj);
-				$body = str_replace('%response', $response, $body);
-				//Email attachment when attached AND if emailed attachments are allowed!
-				$file = null;
-				if (($attachment && is_file($attachment['tmp_name'])) && $cfg->emailAttachments()) {
-					$file = array('file' => $attachment['tmp_name'], 'name' => $attachment['name'], 'type' => $attachment['type']);
+			if($cfg->alertONNewMessage()) {
+				$tplId = $cfg->getDefaultTemplateId();
+				$fromEmail = $cfg->getAlertEmail() ? $cfg->getAlertEmail() : $cfg->getDefaultEmail();
+				//Send Response to client...based on the template...
+				//TODO: check department level templates...if set.			
+				$sql = 'SELECT ticket_reply_subj,ticket_reply_body FROM ' . EMAIL_TEMPLATE_TABLE .
+						' WHERE cfg_id=' . db_input($cfg->getId()) . ' AND tpl_id=' . db_input($tplId);
+				if (($resp = db_query($sql)) && db_num_rows($resp) 
+					&& (list($subj, $body) = db_fetch_row($resp)) && $fromEmail) {
+					$body = $this->replaceTemplateVars($body);
+					$subj = $this->replaceTemplateVars($subj);
+					$body = str_replace('%response', $response, $body);
+					//Email attachment when attached AND if emailed attachments are allowed!
+					$file = null;
+					if (($attachment && is_file($attachment['tmp_name'])) && $cfg->emailAttachments()) {
+						$file = array('file' => $attachment['tmp_name'], 'name' => $attachment['name'], 'type' => $attachment['type']);
+					}
+					
+					//Reply separator tag.
+					if ($cfg->stripQuotedReply() && ($tag = $cfg->getReplySeparator()))
+						$body = "\n$tag\n\n" . $body;
+					
+					//list email
+					$sentlist = $this->getListEmailOfRecipientsONNewMessage();
+					//avoid duplicate email
+					if(!in_array($this->getEmail(), $sentlist)){
+						array_push($sentlist, $this->getEmail());
+					}
+					//send email
+					foreach($sentlist as $email) {
+						$fromEmail->send($email, $subj, $body, $file);
+					}
+				} else {
+					//We have a big problem...alert admin...
+					$msg = 'Problems fetching response template for ticket#' . $this->getId() . ' Possible config error - template #' . $tplId;
+					Sys::alertAdmin('System Error', $msg);
 				}
-				
-				//Reply separator tag.
-				if ($cfg->stripQuotedReply() && ($tag = $cfg->getReplySeparator()))
-					$body = "\n$tag\n\n" . $body;
-				
-				//list email
-				$sentlist = $this->getListEmailOfRecipientsONNewMessage();
-				//avoid duplicate email
-				if(!in_array($this->getEmail(), $sentlist)){
-					array_push($sentlist, $this->getEmail());
-				}
-				//send email
-				foreach($sentlist as $email) {
-					$fromEmail->send($email, $subj, $body, $file);
-				}
-			} else {
-				//We have a big problem...alert admin...
-				$msg = 'Problems fetching response template for ticket#' . $this->getId() . ' Possible config error - template #' . $tplId;
-				Sys::alertAdmin('System Error', $msg);
 			}
             return $resp_id;
         endif;
@@ -1333,20 +1335,22 @@ class Ticket {
             $this->deleteAttachmentByTicketId();
             $this->deleteAttachments();
 			
-			$sql = 'SELECT ticket_delete_subj,ticket_delete_body FROM ' . EMAIL_TEMPLATE_TABLE .
-					' WHERE cfg_id=' . db_input($cfg->getId()) . ' AND tpl_id=' . db_input($tplId);			
-			if (($resp = db_query($sql)) && db_num_rows($resp) 
-				&& (list($subj, $body) = db_fetch_row($resp)) && $fromEmail) {
-				$body = $this->replaceTemplateVars($body);
-				$subj = $this->replaceTemplateVars($subj);
-				
-				//Reply separator tag.
-				if ($cfg->stripQuotedReply() && ($tag = $cfg->getReplySeparator()))
-					$body = "\n$tag\n\n" . $body;
-				
-				//send email
-				foreach($sentlist as $email){
-					$fromEmail->send($email, $subj, $body);
+			if($cfg->alertONDeleteTicket()) {
+				$sql = 'SELECT ticket_delete_subj,ticket_delete_body FROM ' . EMAIL_TEMPLATE_TABLE .
+						' WHERE cfg_id=' . db_input($cfg->getId()) . ' AND tpl_id=' . db_input($tplId);			
+				if (($resp = db_query($sql)) && db_num_rows($resp) 
+					&& (list($subj, $body) = db_fetch_row($resp)) && $fromEmail) {
+					$body = $this->replaceTemplateVars($body);
+					$subj = $this->replaceTemplateVars($subj);
+					
+					//Reply separator tag.
+					if ($cfg->stripQuotedReply() && ($tag = $cfg->getReplySeparator()))
+						$body = "\n$tag\n\n" . $body;
+					
+					//send email
+					foreach($sentlist as $email){
+						$fromEmail->send($email, $subj, $body);
+					}
 				}
 			}
 			
@@ -1659,40 +1663,42 @@ class Ticket {
                     }
                 }
 				
-				$tplId = $cfg->getDefaultTemplateId();
-				$fromEmail = $cfg->getAlertEmail() ? $cfg->getAlertEmail() : $cfg->getDefaultEmail();
-				// get email template.
-				$sql = 'SELECT ticket_update_subj,ticket_update_body FROM ' . EMAIL_TEMPLATE_TABLE .
-						' WHERE cfg_id=' . db_input($cfg->getId()) . ' AND tpl_id=' . db_input($tplId);
-				
-				if (($resp = db_query($sql)) && db_num_rows($resp) 
-					&& (list($subj, $body) = db_fetch_row($resp)) && $fromEmail) {
-					$body = $this->replaceTemplateVars($body);
-					$subj = $this->replaceTemplateVars($subj);
-					$body = str_replace('%message', $var['note'], $body);
+				if($cfg->alertONUpdateTicket()) {
+					$tplId = $cfg->getDefaultTemplateId();
+					$fromEmail = $cfg->getAlertEmail() ? $cfg->getAlertEmail() : $cfg->getDefaultEmail();
+					// get email template.
+					$sql = 'SELECT ticket_update_subj,ticket_update_body FROM ' . EMAIL_TEMPLATE_TABLE .
+							' WHERE cfg_id=' . db_input($cfg->getId()) . ' AND tpl_id=' . db_input($tplId);
 					
-					//Email attachment when attached AND if emailed attachments are allowed!
-					$file = null;
-					$attachment = $_FILES['attachment'];
-					if (($attachment && is_file($attachment['tmp_name'])) && $cfg->emailAttachments()) {
-						$file = array('file' => $attachment['tmp_name'], 'name' => $attachment['name'], 'type' => $attachment['type']);
-					}
+					if (($resp = db_query($sql)) && db_num_rows($resp) 
+						&& (list($subj, $body) = db_fetch_row($resp)) && $fromEmail) {
+						$body = $this->replaceTemplateVars($body);
+						$subj = $this->replaceTemplateVars($subj);
+						$body = str_replace('%message', $var['note'], $body);
+						
+						//Email attachment when attached AND if emailed attachments are allowed!
+						$file = null;
+						$attachment = $_FILES['attachment'];
+						if (($attachment && is_file($attachment['tmp_name'])) && $cfg->emailAttachments()) {
+							$file = array('file' => $attachment['tmp_name'], 'name' => $attachment['name'], 'type' => $attachment['type']);
+						}
 
-					//Reply separator tag.
-					if ($cfg->stripQuotedReply() && ($tag = trim($cfg->getReplySeparator())))
-						$body = "\n$tag\n\n" . $body;
-					
-					//list email
-					$sentlist = $this->getListEmailOfRecipientsOnDeleteTicket();
-					
-					//send
-					foreach($sentlist as $email){
-						$fromEmail->send($email, $subj, $body, $file);
+						//Reply separator tag.
+						if ($cfg->stripQuotedReply() && ($tag = trim($cfg->getReplySeparator())))
+							$body = "\n$tag\n\n" . $body;
+						
+						//list email
+						$sentlist = $this->getListEmailOfRecipientsOnUpdateTicket();
+						
+						//send
+						foreach($sentlist as $email){
+							$fromEmail->send($email, $subj, $body, $file);
+						}
+					} else {
+						//We have a big problem...alert admin...
+						$msg = 'Problems fetching response template for ticket#' . $ticket->getId() . ' Possible config error - template #' . $tplId;
+						Sys::alertAdmin('System Error', $msg);
 					}
-				} else {
-					//We have a big problem...alert admin...
-					$msg = 'Problems fetching response template for ticket#' . $ticket->getId() . ' Possible config error - template #' . $tplId;
-					Sys::alertAdmin('System Error', $msg);
 				}				
 				
                 $this->postNote('Ticket Updated', $var['note']);
