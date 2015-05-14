@@ -596,7 +596,15 @@ table.front_layer input[type="text"].date {
 	width: 450px !important;
 }
 
-.chzn-container .chzn-choices .search-field  .default{
+.chzn-container ul.chzn-choices {
+	height: 25px !important;
+}
+
+.chzn-container ul.chzn-choices .search-field {
+	padding: 4px 0;
+}
+
+.chzn-container ul.chzn-choices .search-field  .default{
 	width: auto !important;
 }
 

@@ -994,6 +994,9 @@ class Ticket {
 					$body = str_replace("%message", $message, $body); //Previous versions used message.
 					$body = str_replace("%assignee", $staff->getName(), $body);
 					$body = str_replace("%assigner", ($thisuser) ? $thisuser->getName() : 'System', $body);
+					//Reply separator tag.
+					if ($cfg->stripQuotedReply() && ($tag = $cfg->getReplySeparator()))
+						$body = "\n$tag\n\n" . $body;
 
 					$fromEmail->send($staff->getEmail(), $subj, $body);
 				} else {
@@ -1101,6 +1104,9 @@ class Ticket {
 						$body = $this->replaceTemplateVars($body);
 						$subj = $this->replaceTemplateVars($subj);
 						$body = str_replace("%message", $msg, $body);
+						//Reply separator tag.
+						if ($cfg->stripQuotedReply() && ($tag = $cfg->getReplySeparator()))
+							$body = "\n$tag\n\n" . $body;
 						
 						//list email
 						$sentlist = $this->getListEmailOfRecipientsONNewMessage();
@@ -1154,11 +1160,11 @@ class Ticket {
 				if (($attachment && is_file($attachment['tmp_name'])) && $cfg->emailAttachments()) {
 					$file = array('file' => $attachment['tmp_name'], 'name' => $attachment['name'], 'type' => $attachment['type']);
 				}
-				echo $fromEmail;
+				
+				//Reply separator tag.
 				if ($cfg->stripQuotedReply() && ($tag = $cfg->getReplySeparator()))
 					$body = "\n$tag\n\n" . $body;
 				
-				echo 'begin send email';
 				//list email
 				$sentlist = $this->getListEmailOfRecipientsONNewMessage();
 				//avoid duplicate email
@@ -1214,6 +1220,10 @@ class Ticket {
                     $body = $this->replaceTemplateVars($body);
                     $subj = $this->replaceTemplateVars($subj);
                     $body = str_replace('%note', "$title\n\n$note", $body);
+					
+					//Reply separator tag.
+					if ($cfg->stripQuotedReply() && ($tag = $cfg->getReplySeparator()))
+						$body = "\n$tag\n\n" . $body;
 					
 					//list email
 					$sentlist = $this->getListEmailOfRecipientsOnNewNote();
@@ -1329,6 +1339,10 @@ class Ticket {
 				&& (list($subj, $body) = db_fetch_row($resp)) && $fromEmail) {
 				$body = $this->replaceTemplateVars($body);
 				$subj = $this->replaceTemplateVars($subj);
+				
+				//Reply separator tag.
+				if ($cfg->stripQuotedReply() && ($tag = $cfg->getReplySeparator()))
+					$body = "\n$tag\n\n" . $body;
 				
 				//send email
 				foreach($sentlist as $email){
@@ -1520,7 +1534,7 @@ class Ticket {
         $objLeague = new League();
         $arrLeague = $objLeague->getInfoByIbcId($league_id);
         if ($arrLeague == null) {
-            $intLeague = $objLeague->create($arrIBCLeague);
+            $intLeague = $objLeague->create($arrIBCLeague, $errors);
         } else {
             $intLeague = $arrLeague['league_id'];
         }
@@ -1544,7 +1558,7 @@ class Ticket {
         $objTeam = new Team();
         $arrHomeTeam = $objTeam->getInfoByIbcId($intIbcHomeId);
         if ($arrHomeTeam == null) {
-            $intHomeId = $objTeam->create($arrIBCHomeTeam);
+            $intHomeId = $objTeam->create($arrIBCHomeTeam, $errors);
         } else {
             $intHomeId = $arrHomeTeam['team_id'];
         }
@@ -1556,7 +1570,7 @@ class Ticket {
 
         $arrAwayTeam = $objTeam->getInfoByIbcId($intIbcAwayId);
         if ($arrAwayTeam == null) {
-            $intAwayId = $objTeam->create($arrIBCAwayTeam);
+            $intAwayId = $objTeam->create($arrIBCAwayTeam, $errors);
         } else {
             $intAwayId = $arrAwayTeam['team_id'];
         }
@@ -1568,7 +1582,7 @@ class Ticket {
         $objMatch = new Match();
         $arrMatch = $objMatch->getInfoByIbcId($var['match']);
         if ($arrMatch == null) {
-            $intMatchId = $objMatch->create($arrIBCMatch);
+            $intMatchId = $objMatch->create($arrIBCMatch, $errors);
         } else {
             $intMatchId = $arrMatch['match_id'];
         }
@@ -1664,10 +1678,14 @@ class Ticket {
 						$file = array('file' => $attachment['tmp_name'], 'name' => $attachment['name'], 'type' => $attachment['type']);
 					}
 
+					//Reply separator tag.
 					if ($cfg->stripQuotedReply() && ($tag = trim($cfg->getReplySeparator())))
 						$body = "\n$tag\n\n" . $body;
 					
+					//list email
 					$sentlist = $this->getListEmailOfRecipientsOnDeleteTicket();
+					
+					//send
 					foreach($sentlist as $email){
 						$fromEmail->send($email, $subj, $body, $file);
 					}
@@ -1771,7 +1789,12 @@ class Ticket {
 						$body = str_replace("%name", $var['name'], $body);
 						$body = str_replace("%email", $var['email'], $body);
 						$body = str_replace("%url", $cfg->getBaseUrl(), $body);
-							
+						
+						//Reply separator tag.
+						if ($cfg->stripQuotedReply() && ($tag = $cfg->getReplySeparator()))
+							$body = "\n$tag\n\n" . $body;
+						
+						//send
 						$fromEmail->send($var['email'], $subj, $body);
 					}
 					
@@ -1832,7 +1855,7 @@ class Ticket {
 		$objLeague = new League();
 		$arrLeague = $objLeague->getInfoByIbcId($league_id);
 		if ($arrLeague == null) {
-			$intLeague = $objLeague->create($arrIBCLeague);
+			$intLeague = $objLeague->create($arrIBCLeague, $errors);
 		} else {
 			$intLeague = $arrLeague['league_id'];
 		}
@@ -1857,7 +1880,7 @@ class Ticket {
 		$objTeam = new Team();
 		$arrHomeTeam = $objTeam->getInfoByIbcId($intIbcHomeId);
 		if ($arrHomeTeam == null) {
-			$intHomeId = $objTeam->create($arrIBCHomeTeam);
+			$intHomeId = $objTeam->create($arrIBCHomeTeam, $errors);
 		} else {
 			$intHomeId = $arrHomeTeam['team_id'];
 		}
@@ -1868,7 +1891,7 @@ class Ticket {
 
 		$arrAwayTeam = $objTeam->getInfoByIbcId($intIbcAwayId);
 		if ($arrAwayTeam == null) {
-			$intAwayId = $objTeam->create($arrIBCAwayTeam);
+			$intAwayId = $objTeam->create($arrIBCAwayTeam, $errors);
 		} else {
 			$intAwayId = $arrAwayTeam['team_id'];
 		}
@@ -1880,7 +1903,7 @@ class Ticket {
 		$objMatch = new Match();
 		$arrMatch = $objMatch->getInfoByIbcId($var['match']);
 		if ($arrMatch == null) {
-			$intMatchId = $objMatch->create($arrIBCMatch);
+			$intMatchId = $objMatch->create($arrIBCMatch, $errors);
 		} else {
 			$intMatchId = $arrMatch['match_id'];
 		}		
@@ -1971,9 +1994,13 @@ class Ticket {
 					$body = $ticket->replaceTemplateVars($body);
 					$subj = $ticket->replaceTemplateVars($subj);
 					$body = str_replace('%message', ($var['issue'] ? $var['issue'] : $var['message']), $body);
+					//Reply separator tag.
+					if ($cfg->stripQuotedReply() && ($tag = $cfg->getReplySeparator()))
+						$body = "\n$tag\n\n" . $body;
 					
 					//list email
 					$sentlist = $ticket->getListEmailOfRecipientsOnNewTicket();
+					
 					//send email
 					foreach($sentlist as $email) {
 						$fromEmail->send($email, $subj, $body);
@@ -2017,9 +2044,9 @@ class Ticket {
 					
 					$sql = 'SELECT ticket_notice_subj,ticket_notice_body FROM ' . EMAIL_TEMPLATE_TABLE .
 							' WHERE cfg_id=' . db_input($cfg->getId()) . ' AND tpl_id=' . db_input($tplId);
-
+					
 					if (($resp = db_query($sql)) && db_num_rows($resp) 
-						&& list($subj, $body) = db_fetch_row($resp) && $fromEmail) {
+						&& (list($subj, $body) = db_fetch_row($resp)) && $fromEmail) {
 						$body = $ticket->replaceTemplateVars($body);
 						$subj = $ticket->replaceTemplateVars($subj);
 						$body = str_replace('%message', $var['issue'], $body);
@@ -2029,9 +2056,11 @@ class Ticket {
 						if (($attachment && is_file($attachment['tmp_name'])) && $cfg->emailAttachments()) {
 							$file = array('file' => $attachment['tmp_name'], 'name' => $attachment['name'], 'type' => $attachment['type']);
 						}
-
+						//Reply separator tag.
 						if ($cfg->stripQuotedReply() && ($tag = trim($cfg->getReplySeparator())))
 							$body = "\n$tag\n\n" . $body;
+						
+						//send email
 						$fromEmail->send($ticket->getEmail(), $subj, $body, $file);
 					} else {
 						//We have a big problem...alert admin...
@@ -2048,9 +2077,9 @@ class Ticket {
             }
             //post create actions
             if ($var['staffId']) { //Assign ticket to staff if any. (internal note as message)
-                //$ticket->assignStaff($var['staffId'], $var['note'], (isset($var['alertstaff'])));
+                $ticket->assignStaff($var['staffId'], $var['note'], (isset($var['alertstaff'])));
             } elseif ($var['note']) { //Not assigned...save optional note if any
-                //$ticket->postNote('New Ticket', $var['note'], false);
+                $ticket->postNote('New Ticket', $var['note'], false);
             } else { //Not assignment and no internal note - log activity 
                 $ticket->logActivity('New Ticket by Staff', 'Ticket created by staff -' . $thisuser->getName());
             }
