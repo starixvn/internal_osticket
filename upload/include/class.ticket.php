@@ -642,6 +642,11 @@ class Ticket {
 				array_push($sentlist, $cfg->getAdminEmail());
 			}
 			
+			//email ticket
+			if (!in_array($this->getEmail(), $sentlist)) {
+				array_push($sentlist, $this->getEmail());
+			}
+			
 			//Departments
 			if ($cfg->alertDeptONUpdateTicket() && $this->getEmails()) {
 				foreach($this->getEmails() as $email) {
@@ -685,6 +690,11 @@ class Ticket {
 			//Admin
 			if ($cfg->alertAdminONDeleteTicket() && $cfg->getAdminEmail()) {
 				array_push($sentlist, $cfg->getAdminEmail());
+			}
+			
+			//email ticket
+			if (!in_array($this->getEmail(), $sentlist)) {
+				array_push($sentlist, $this->getEmail());
 			}
 			
 			//Departments
@@ -734,6 +744,11 @@ class Ticket {
 				array_push($sentlist, $staff->getEmail());
 			}
 			
+			//email ticket
+			if (!in_array($this->getEmail(), $sentlist)) {
+				array_push($sentlist, $this->getEmail());
+			}
+			
 			//Assigned staff if any...could be the last respondent
 			if ($cfg->alertAssignedONNewNote() && $this->isAssigned()) {
 				$staff = $this->getStaff();
@@ -780,6 +795,11 @@ class Ticket {
 				array_push($sentlist, $staff->getEmail());
 			}
 			
+			//email ticket
+			if (!in_array($this->getEmail(), $sentlist)) {
+				array_push($sentlist, $this->getEmail());
+			}
+			
 			//Assigned staff if any...could be the last respondent
 			if ($cfg->alertAssignedONNewMessage() && $this->isAssigned()) {
 				$staff = $this->getStaff();
@@ -824,6 +844,11 @@ class Ticket {
 			if ($cfg->alertAssignedONNewNote() && $this->isAssigned()) {
 				$staff = $this->getStaff();
 				array_push($sentlist, $staff->getEmail());
+			}
+			
+			//email ticket
+			if (!in_array($this->getEmail(), $sentlist)) {
+				array_push($sentlist, $this->getEmail());
 			}
 			
 			//Departments
@@ -986,7 +1011,7 @@ class Ticket {
 				$sql = 'SELECT assigned_alert_subj,assigned_alert_body FROM ' . EMAIL_TEMPLATE_TABLE .
 						' WHERE cfg_id=' . db_input($cfg->getId()) . ' AND tpl_id=' . db_input($tplId);
 				if (($resp = db_query($sql)) && db_num_rows($resp) 
-					&& list($subj, $body) = db_fetch_row($resp) && $fromEmail) {
+					&& (list($subj, $body) = db_fetch_row($resp)) && $fromEmail) {
 					$body = $this->replaceTemplateVars($body);
 					$subj = $this->replaceTemplateVars($subj);
 					
@@ -1701,7 +1726,12 @@ class Ticket {
 					}
 				}				
 				
-                $this->postNote('Ticket Updated', $var['note']);
+				//assign new staff
+				if($var['staffId']!=$this->getStaffId()) {
+					$this->assignStaff($var['staffId'], $var['note'], true);
+				} else {				
+					$this->postNote('Ticket Updated', $var['note']);
+				}
                 $this->reload();
                 return true;
             }

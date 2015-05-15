@@ -17,7 +17,7 @@ if(!defined('OSTSCPINC') || !@$thisuser->isStaff() || !is_object($ticket) ) die(
 $deptIds = array();
 $isCanAccessDept = false;
 
-foreach($ticket->depts as $dept) {
+foreach($ticket->getDepts() as $dept) {
 	array_push($deptIds, $dept->getId());	
 	
 	if($thisuser->canAccessDept($dept->getId()))
@@ -77,7 +77,7 @@ if($ticket->isOverdue())
                 <td>
 					<ul>
 					<?
-					foreach($ticket->depts as $dept) {
+					foreach($ticket->getDepts() as $dept) {
 					?>
 						<li><?=$dept->getName()?></li>
 					<?}

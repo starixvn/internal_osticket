@@ -36,14 +36,14 @@ if(!$errors && ($id=$_REQUEST['id']?$_REQUEST['id']:$_POST['ticket_id']) && is_n
     $ticket= new Ticket($id);
 	$isCanAccessDept = false;
 	$deptIds = array();
-	foreach($ticket->depts as $dept) {
+	foreach($ticket->getDepts() as $dept) {
 		array_push($deptIds, $dept->getId());
 		
 		if($thisuser->canAccessDept($dept->getId()))
 			$isCanAccessDept = true;
 	}
 	
-    if(!$ticket or !$ticket->depts or !deptIds) {
+    if(!$ticket or !$ticket->getDepts() or !deptIds) {
         $errors['err']='Unknown ticket ID#'.$id; //Sucker...invalid id
 	}
     elseif(!$thisuser->isAdmin()  
@@ -75,7 +75,7 @@ if($_POST && !$errors):
 		
 		$isCanAccessDept = false;
 		$deptIds = array();
-		foreach($ticket->depts as $dept) {
+		foreach($ticket->getDepts() as $dept) {
 			array_push($deptIds, $dept->getId());
 			
 			if($thisuser->canAccessDept($dept->getId()))

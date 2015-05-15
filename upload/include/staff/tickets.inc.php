@@ -656,7 +656,7 @@ $basic_display=!isset($_REQUEST['advance_search'])?true:false;
                 <td nowrap>
 					<ul class="list-department">
 					<?
-					foreach($ticket->depts as $dept) {
+					foreach($ticket->getDepts() as $dept) {
 					?>
 						<li><?=Format::truncate($dept->getName(),30)?></li>
 					<?}

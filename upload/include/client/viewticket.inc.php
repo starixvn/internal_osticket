@@ -7,7 +7,7 @@ $info=($_POST && $errors)?Format::input($_POST):array(); //Re-use the post info 
 
 //Making sure we don't leak out internal dept names
 $depts = array();
-foreach($ticket->depts as $dept) {
+foreach($ticket->getDepts() as $dept) {
 	if($dept->isPublic()) {
 		array_push($depts, $dept);
 	}

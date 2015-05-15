@@ -72,7 +72,7 @@ class TicketsAjaxAPI{
         $ticket = new Ticket($params['tid']);
 		$isCanAccessDept = false;
 
-		foreach($ticket->depts as $dept) {
+		foreach($ticket->getDepts() as $dept) {
 			if($thisuser->canAccessDept($dept->getId()))
 				$isCanAccessDept = true;
 		}

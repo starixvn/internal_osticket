@@ -22,7 +22,7 @@
 if(!defined('OSTSCPINC') || !is_object($ticket) || !is_object($thisuser) || !$thisuser->isStaff()) die('Access Denied');
 
 $deptIds = array();
-foreach($ticket->depts as $dept) {
+foreach($ticket->getDepts() as $dept) {
 	array_push($deptIds, $dept->getId());
 }
 
@@ -48,6 +48,7 @@ if($_POST && $errors){
                 'suspender' =>$ticket->getSuspender(),
                 'csd' =>$ticket->getCsd(),  
                 'provider' =>$ticket->getProvider(),
+				'staffId'=>$ticket->getStaffId(),
                 'duedate' =>$ticket->getDueDate()?(Format::userdate('m/d/Y',Misc::db2gmtime($ticket->getDueDate()))):'',
                 'time'=>$ticket->getDueDate()?(Format::userdate('G:i',Misc::db2gmtime($ticket->getDueDate()))):'',
                 );    
@@ -510,6 +511,31 @@ if($_POST && $errors){
             </td>
         </tr>
         <?
+        }?>
+		<?
+		 //When the ticket is assigned Allow assignee, admin or ANY dept manager to reassign the ticket.
+		if(!$ticket->isAssigned() || $thisuser->isadmin()  
+			|| $thisuser->isManager() || $thisuser->getId()==$ticket->getStaffId()) {
+		?>
+		<tr>
+			<td>Assign To:</td>
+			<td>
+				<select id="staffId" name="staffId" style="float: left" class="select_choose">
+					<option value="0" selected="selected">-Assign To Staff-</option>
+					<?
+					//TODO: make sure the user's group is also active....DO a join.
+					$sql = ' SELECT staff_id,CONCAT_WS(", ",lastname,firstname) as name FROM ' . STAFF_TABLE . ' WHERE isactive=1 AND onvacation=0 ';
+					$depts = db_query($sql . ' ORDER BY lastname,firstname ');
+					while (list($staffId, $staffName) = db_fetch_row($depts)) {
+						$selected = ($info['staffId'] == $staffId) ? 'selected' : '';
+						?>
+						<option value="<?= $staffId ?>"<?= $selected ?>><?= $staffName ?></option>
+					<? }
+					?>
+				</select><label class='error'>&nbsp;<?= $errors['staffId'] ?></label>
+		   </td>
+		</tr>
+		<?
         }?>
         <tr>
             <td align="left" valign="top">Attachment(s):</td>
