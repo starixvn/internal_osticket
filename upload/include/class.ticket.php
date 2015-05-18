@@ -2022,7 +2022,7 @@ class Ticket {
 			}
 			
 			//If enabled...send alert (New Ticket Alert)
-			if ($alertstaff && $cfg->alertONNewTicket() && is_object($ticket)) {
+			if ($cfg->alertONNewTicket() && is_object($ticket)) {
 				$sql = 'SELECT ticket_alert_subj,ticket_alert_body FROM ' . EMAIL_TEMPLATE_TABLE .
 						' WHERE cfg_id=' . db_input($cfg->getId()) . ' AND tpl_id=' . db_input($tplId);
 				if (($resp = db_query($sql)) && db_num_rows($resp) 

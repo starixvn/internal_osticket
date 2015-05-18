@@ -41,8 +41,8 @@
     #Error reporting...Good idea to ENABLE error reporting to a file. i.e display_errors should be set to false
     error_reporting(E_ALL ^ E_NOTICE); //Respect whatever is set in php.ini (sysadmin knows better??)
     #Don't display errors
-    ini_set('display_errors',1);
-    ini_set('display_startup_errors',1);
+    ini_set('display_errors',0);
+    ini_set('display_startup_errors',0);
 	
 	//Change default value of post_max_size and upload_max_filesize
 	ini_set('post_max_size', '200M');
