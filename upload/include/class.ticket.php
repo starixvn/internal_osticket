@@ -2065,7 +2065,7 @@ class Ticket {
         $var['emailId'] = 0; //clean crap.
         $var['message'] = 'Ticket created by staff';
 		
-        if (($ticket = Ticket::create($var, $errors, 'staff', false, (!$var['staffId'])))) {  //Staff are alerted only IF the ticket is not being assigned.
+        if (($ticket = Ticket::create($var, $errors, 'staff', false, (!$var['staffId'])))) {
             //post issue as a response...
             $msgId = $ticket->getLastMsgId();
             $issue = $ticket->replaceTemplateVars($var['issue']);

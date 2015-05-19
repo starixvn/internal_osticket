@@ -192,22 +192,48 @@ class Dept {
         if($id==$cfg->getDefaultDeptId())
             return 0;
         
-        $sql='DELETE FROM '.DEPT_TABLE.' WHERE dept_id='.db_input($id);
+		$sql='DELETE FROM '.DEPT_TABLE.' WHERE dept_id='.db_input($id);
         if(db_query($sql) && ($num=db_affected_rows())){
-            // DO SOME HOUSE CLEANING
-            //TODO: Do insert select internal note...
-            //Move tickets to default Dept.
-            db_query('UPDATE '.TICKET_TABLE.' SET dept_id='.db_input($cfg->getDefaultDeptId()).' WHERE dept_id='.db_input($id));
-            //Move Dept members 
-            //This should never happen..since delete should be issued only to empty Depts...but check it anyways 
-            db_query('UPDATE '.STAFF_TABLE.' SET dept_id='.db_input($cfg->getDefaultDeptId()).' WHERE dept_id='.db_input($id));
-            //make help topic using the dept default to default-dept.
-            db_query('UPDATE '.TOPIC_TABLE.' SET dept_id='.db_input($cfg->getDefaultDeptId()).' WHERE dept_id='.db_input($id));
-			//Delete email list
-			db_query('DELETE FROM '.DEPT_EMAIL_TABLE.' WHERE dept_id='.db_input($id));
+			$ticketIds = array();
+			$sql='SELECT DISTINCT ticket_id from '.TICKET_DEPARTMENT_TABLE.' WHERE dept_id = '.db_input($id);
+			if(($res=db_query($sql)) && db_num_rows($res)) {
+				while ($row = db_fetch_array($res)) {
+					array_push($ticketIds, $row['ticket_id']);
+				}
+			}
+			
+			foreach($ticketIds as $ticketId) {
+				$count = 0;
+				$sql='SELECT COUNT(*) from '.TICKET_DEPARTMENT_TABLE.' WHERE ticket_id = '.db_input($ticketId);
+				if (($res = db_query($sql)) && db_num_rows($res)) {
+					list($count) = db_fetch_row($res);
+				}
+				
+				if($count > 1) {
+					db_query('DELETE FROM '.TICKET_DEPARTMENT_TABLE.
+						' WHERE ticket_id='.db_input($ticketId).' AND dept_id='.db_input($id));
+				}
+				elseif($count == 1) {
+					//Move tickets to default Dept.
+					db_query('UPDATE '.TICKET_DEPARTMENT_TABLE.
+						' SET dept_id='.db_input($cfg->getDefaultDeptId()).
+						' WHERE ticket_id='.db_input($ticketId));
+					
+					//Move Dept members
+					//This should never happen..since delete should be issued only to empty Depts...but check it anyways 
+					db_query('UPDATE '.STAFF_TABLE.
+						' SET dept_id='.db_input($cfg->getDefaultDeptId()).
+						' WHERE dept_id='.db_input($id));
+					
+					//make help topic using the dept default to default-dept.
+					db_query('UPDATE '.TOPIC_TABLE.
+						' SET dept_id='.db_input($cfg->getDefaultDeptId()).
+						' WHERE dept_id='.db_input($id));
+				}
+			}
             return $num;
         }
-        return 0;        
+        return 0;      
     }
 
     function save($id,$vars,&$errors) {

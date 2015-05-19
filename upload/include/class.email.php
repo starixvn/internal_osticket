@@ -400,24 +400,45 @@ class Email {
 
     function deleteEmail($id) {
         global $cfg;
+		
         //Make sure we are not trying to delete default emails.
         if($id==$cfg->getDefaultEmailId() || $id==$cfg->getAlertEmailId()) //double...double check.
             return 0;
-
-        $sql='DELETE FROM '.EMAIL_TABLE.' WHERE email_id='.db_input($id).' LIMIT 1';
-        if(db_query($sql) && ($num=db_affected_rows())){
-            // DO SOME HOUSE CLEANING..should be taken care already...but doesn't hurt to make sure.
-
-            //Update Depts using the email to defaults.
-            db_query('UPDATE '.DEPT_TABLE.' SET email_id='.db_input($cfg->getDefaultEmailId()).' WHERE email_id='.db_input($id));
-            db_query('UPDATE '.DEPT_TABLE.' SET autoresp_email_id=0 WHERE email_id='.db_input($id));
-            return $num;
-        }
+		
+		$sql='DELETE FROM '.EMAIL_TABLE.' WHERE email_id='.db_input($id).' LIMIT 1';		
+		if(db_query($sql) && ($num=db_affected_rows())){
+			$deptIds = array();
+			$sql='SELECT DISTINCT dept_id from '.DEPT_EMAIL_TABLE.' WHERE email_id = '.db_input($id);
+			if(($res=db_query($sql)) && db_num_rows($res)) {
+				while ($row = db_fetch_array($res)) {
+					array_push($deptIds, $row['dept_id']);
+				}
+			}
+			
+			foreach($deptIds as $deptId){
+				$count = 0;
+				$sql='SELECT COUNT(*) from '.DEPT_EMAIL_TABLE.' WHERE dept_id = '.db_input($deptId);
+				if (($res = db_query($sql)) && db_num_rows($res)) {
+					list($count) = db_fetch_row($res);
+				}
+								
+				if($count > 1) {
+					db_query('DELETE FROM '.DEPT_EMAIL_TABLE.
+						' WHERE dept_id='.db_input($deptId).' AND email_id='.db_input($id));
+				}
+				elseif($count == 1) {
+					//Update Depts using the email to defaults.
+					db_query('UPDATE '.DEPT_EMAIL_TABLE.
+						' SET email_id='.db_input($cfg->getDefaultEmailId()).
+						' WHERE dept_id='.db_input($deptId));
+					db_query('UPDATE '.DEPT_TABLE.' SET autoresp_email_id=0 WHERE dept_id='.db_input($id));
+				}
+			}
+			
+			return $num;
+		}
+		
         return 0;
-    }
-
-
-
-    
+    }  
 }
 ?>
