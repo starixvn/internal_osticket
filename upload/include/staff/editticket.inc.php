@@ -223,9 +223,9 @@ if($_POST && $errors){
                 <input type="hidden" value="<?php echo $strLeagueName; ?>" id="league_name"/>
                 <input type="hidden" value="<?php echo $intIbcLeagueId; ?>" id="league" name="league"/>
                 <input type="hidden" style="width:450px" id="league_edit" class="bigdrop select2-offscreen" tabindex="-1">
-                &nbsp;<label class="error pull-left">*&nbsp;<?= $errors['league'] ?></label>
-                <span id="loading_league" class="loading"></span>
                 <label class="error_js" id="mess_league"></label>
+				&nbsp;<label class="error">*&nbsp;<?= $errors['league'] ?></label>
+                <span id="loading_league" class="loading"></span>
             </td>
         </tr>
         <tr>
@@ -592,7 +592,7 @@ if($_POST && $errors){
             <td></td>
             <td>
                 <input class="button" type="button" name="submit_x" value="Update Ticket" id="insert_ticket">
-                <input class="button" type="reset" value="Reset">
+                <input class="button" type="reset" value="Reset" onClick='window.location.href="tickets.php?id=<?=$ticket->getId()?>&a=edit"'>
                 <input class="button" type="button" name="cancel" value="Cancel" onClick='window.location.href="tickets.php?id=<?=$ticket->getId()?>"'>    
             </td>
         </tr>

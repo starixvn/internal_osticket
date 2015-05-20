@@ -170,9 +170,9 @@ $info = ($_POST && $errors) ? Format::input($_POST) : array(); //on error...use 
         <td>
             <input type="hidden" value="" id="league" name="league"/>
             <input type="hidden" style="width:450px" name="league_new" id="league_new" class="bigdrop select2-offscreen" tabindex="-1">
-            &nbsp;<label class="error pull-left">*&nbsp;<?= $errors['league'] ?></label>
-            <span id="loading_league" class="loading"></span>
-			<label class="error_js" id="mess_league"></label>            
+            <label class="error_js" id="mess_league"></label>
+			&nbsp;<label class="error">*&nbsp;<?= $errors['league'] ?></label>
+            <span id="loading_league" class="loading"></span>            
         </td>
     </tr>
     <tr>
@@ -211,7 +211,7 @@ $info = ($_POST && $errors) ? Format::input($_POST) : array(); //on error...use 
                 <option value="0"></option>                 
             </select>    
             <label class="error_js" id="mess_match"></label>
-            &nbsp;<label class="error pull-left">*&nbsp;<?= $errors['match'] ?></label>
+            &nbsp;<label class="error">*&nbsp;<?= $errors['match'] ?></label>
             <span id="loading_match" class="loading"></span>
            <!-- ui-dialog -->
             <div id="dialog_match" title="Add New Match">
@@ -336,7 +336,7 @@ $info = ($_POST && $errors) ? Format::input($_POST) : array(); //on error...use 
                 if ($result_prov && db_num_rows($result_prov)) {
                     while ($row_prov = db_fetch_array($result_prov)) {
                         ?>
-                        <option value="<?= $row_prov['actor_id'] ?>" <?php if ($info['csd'] == $row_prov['actor_id']) echo 'selected="selected"'; ?>><?= $row_prov['actor_name'] ?></option>
+                        <option value="<?= $row_prov['actor_id'] ?>" <?php if ($info['provider'] == $row_prov['actor_id']) echo 'selected="selected"'; ?>><?= $row_prov['actor_name'] ?></option>
                         <?php
                     }
                 }
@@ -509,7 +509,7 @@ if ($services && db_num_rows($services)) {
         <td></td>
         <td>
             <input class="button" type="button" name="submit_x" value="Submit Ticket" id="insert_ticket">
-            <input class="button" type="reset" value="Reset">
+            <input class="button" type="reset" value="Reset" onClick='window.location.href="tickets.php?a=open"'>
             <input class="button" type="button" name="cancel" value="Cancel" onClick='window.location.href="tickets.php"'>    
         </td>
     </tr>

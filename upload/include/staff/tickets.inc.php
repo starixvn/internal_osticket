@@ -73,17 +73,13 @@ $qwhere ='';
    User can also see tickets assigned to them regardless of the ticket's dept.
 */
 $depts=$thisuser->getDepts(); //if dept returns nothing...show only tickets without dept which could mean..none...and display an error. huh?
-if(!$depts or !is_array($depts) or !count($depts)){
-    //if dept returns nothing...show only orphaned tickets (without dept) which could mean..none...and display an error.
-    $qwhere =' WHERE ticket.dept_id IN ( 0 ) ';
-}else if($thisuser->isadmin()){
+if($thisuser->isadmin()){
     //user allowed acess to all departments.
-    $qwhere =' WHERE 1'; // Brain fart...can not thing of a better way other than selecting all depts + 0 ..wasted query in my book?
-}else{
+    $qwhere =' WHERE 1 '; // Brain fart...can not thing of a better way other than selecting all depts + 0 ..wasted query in my book?
+}else if($depts && is_array($depts) && count($depts)){
     //limited depts....user can access tickets assigned to them regardless of the dept.
-    $qwhere =' WHERE (ticket.dept_id IN ('.implode(',',$depts).') OR ticket.staff_id='.$thisuser->getId().')';
+    $qwhere =' WHERE (dept.dept_id IN ('.implode(',',$depts).') OR ticket.staff_id='.$thisuser->getId().')';
 }
-
 
 //STATUS
 if($status){
@@ -155,7 +151,7 @@ if($search):
     //department
     if($_REQUEST['dept'] && ($thisuser->isadmin() || in_array($_REQUEST['dept'],$thisuser->getDepts()))) {
     //This is dept based search..perm taken care above..put the sucker in.
-        $qwhere.=' AND ticket.dept_id='.db_input($_REQUEST['dept']);
+        $qwhere.=' AND dept.dept_id='.db_input($_REQUEST['dept']);
         $qstr.='&dept='.urlencode($_REQUEST['dept']);
     }
      //sport
@@ -266,7 +262,7 @@ $page=($_GET['p'] && is_numeric($_GET['p']))?$_GET['p']:1;
 $qselect = 'SELECT DISTINCT ticket.ticket_id,lock_id,ticketID,ticket.dept_id,ticket.staff_id,subject,name,email,dept_name '.
            ',ticket.status,ticket.source,isoverdue,isanswered,ticket.created,pri.* ,count(attach.attach_id) as attachments ';
  */
-$qselect = "SELECT DISTINCT ticket.ticket_id,lock_id,ticketID,ticket.dept_id,ticket.staff_id,subject,league,`match`,trader,suspender,csd,name,email,dept_name ".
+$qselect = "SELECT DISTINCT ticket.ticket_id,lock_id,ticketID,ticket.staff_id,subject,league,`match`,trader,suspender,csd,name,email ".
            ",ticket.status,ticket.source,isoverdue,isanswered,ticket.created,pri.* ,count(attach.attachment_id) as attachments" .
             ", CASE ticket.staff_id
                 WHEN 0
@@ -277,9 +273,10 @@ $qselect = "SELECT DISTINCT ticket.ticket_id,lock_id,ticketID,ticket.dept_id,tic
                END AS staff_name";
  // end
 $qfrom=' FROM '.TICKET_TABLE.' ticket '.
-       ' LEFT JOIN '.DEPT_TABLE.' `dept` ON `ticket`.`dept_id`=`dept`.`dept_id` '.
-       ' LEFT JOIN '.MATCH_TABLE.' `ma` ON ticket.match=`ma`.`match_id` '.
-       ' LEFT JOIN '.ATTACHMENT_TABLE.' `attach` ON `ticket`.`ticket_id`=`attach`.`ticket_id` ';
+	   ' LEFT JOIN '.TICKET_DEPARTMENT_TABLE.' ticketDept ON ticket.ticket_id=ticketDept.ticket_id '.
+       ' LEFT JOIN '.DEPT_TABLE.' dept ON ticketDept.dept_id=dept.dept_id '.
+       ' LEFT JOIN '.MATCH_TABLE.' ma ON ticket.match=ma.match_id '.
+       ' LEFT JOIN '.ATTACHMENT_TABLE.' attach ON ticket.ticket_id=attach.ticket_id ';
 
 if($search && $deep_search) {
     $qfrom.=' LEFT JOIN '.TICKET_MESSAGE_TABLE.' message ON (ticket.ticket_id=message.ticket_id )';

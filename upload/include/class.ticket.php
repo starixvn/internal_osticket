@@ -36,9 +36,7 @@ class Ticket {
     var $priority_id;
     var $fullname;
     var $staff_id;
-    var $dept_id;
     var $topic_id;
-    var $dept_name;
     var $subject;
     // customized osticket
     var $sport_type;
@@ -59,7 +57,6 @@ class Ticket {
     var $helptopic;
     var $overdue;
     var $lastMsgId;
-    var $dept;  //Dept class
 	var $depts; //Depts class
     var $staff; //Staff class
     var $topic; //Topic class
@@ -70,7 +67,7 @@ class Ticket {
     }
 
     function load($id) {
-        $sql = ' SELECT  ticket.*,topic.topic_id as topicId,lock_id,dept_name,lea.league_name,ticket.sport_type,spor.sport_name
+        $sql = ' SELECT  ticket.*,topic.topic_id as topicId,lock_id,lea.league_name,ticket.sport_type,spor.sport_name
                ,tra.actor_name AS trader_name,su.actor_name AS suspender_name,cs.actor_name AS csd_name,prov.actor_name AS provider_name,priority_desc' .
                 ",CASE home_id
                     WHEN 0
@@ -94,7 +91,6 @@ class Ticket {
                 ' LEFT JOIN ' . ACTOR_TABLE . ' su ON ticket.suspender=su.actor_id ' .
                 ' LEFT JOIN ' . ACTOR_TABLE . ' cs ON ticket.csd=cs.actor_id ' .
                 ' LEFT JOIN ' . ACTOR_TABLE . ' prov ON ticket.provider=prov.actor_id ' .
-                ' LEFT JOIN ' . DEPT_TABLE . ' dept ON ticket.dept_id=dept.dept_id ' .
                 ' LEFT JOIN ' . TICKET_PRIORITY_TABLE . ' pri ON ticket.priority_id=pri.priority_id ' .
                 ' LEFT JOIN ' . TOPIC_TABLE . ' topic ON ticket.topic_id=topic.topic_id ' .
                 ' LEFT JOIN ' . TICKET_LOCK_TABLE . ' tlock ON ticket.ticket_id=tlock.ticket_id AND tlock.expire>NOW() ' .
@@ -118,9 +114,7 @@ class Ticket {
             $this->priority_id = $row['priority_id'];
             $this->priority = $row['priority_desc'];
             $this->staff_id = $row['staff_id'];
-            $this->dept_id = $row['dept_id'];
             $this->topic_id = $row['topicId']; //Note that we're actually joining the topic table to make the topic is not deleted (long story!).
-            $this->dept_name = $row['dept_name'];
             $this->subject = $row['subject'];
             // customized osticket
             $this->sport_type = $row['sport_type'];
@@ -143,7 +137,6 @@ class Ticket {
             $this->row = $row;
             //Reset the sub classes (initiated ondemand)...good for reloads.
             $this->staff = array();
-            $this->dept = array();
 			//get list dept of ticket
 			$this->getDepts();
             return true;
@@ -300,14 +293,6 @@ class Ticket {
 
     function getStatus() {
         return $this->status;
-    }
-
-    function getDeptId() {
-        return $this->dept_id;
-    }
-
-    function getDeptName() {
-        return $this->dept_name;
     }
 	
 	function getDepts() {
@@ -517,13 +502,13 @@ class Ticket {
     }
 
     //DeptId can NOT be 0. No orphans please!
-    function setDeptId($deptId) {
+    /*function setDeptId($deptId) {
         if (!$deptId)
             return false;
 
         $sql = 'UPDATE ' . TICKET_TABLE . ' SET dept_id=' . db_input($deptId) . ' WHERE ticket_id=' . db_input($this->getId());
         return (db_query($sql) && db_affected_rows()) ? true : false;
-    }
+    }*/
 
     //set staff ID...assign/unassign/release (staff id can be 0)
     function setStaffId($staffId) {
@@ -977,7 +962,7 @@ class Ticket {
     }
 
     //Dept Tranfer...with alert..
-    function transfer($deptId) {
+    /*function transfer($deptId) {
         global $cfg;
         
           //TODO:
@@ -987,7 +972,7 @@ class Ticket {
           //3) Other crap I don't have time to think about at the moment.
          
         return $this->setDeptId($deptId) ? true : false;
-    }
+    }*/
 
     //Assign: staff
     function assignStaff($staffId, $message, $alertstaff = true) {

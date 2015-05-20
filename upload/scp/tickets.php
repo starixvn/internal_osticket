@@ -460,14 +460,16 @@ endif;
 $submenu=array();
 /*quick stats...*/
 $sql='SELECT count(open.ticket_id) as open, count(answered.ticket_id) as answered '.
-     ',count(overdue.ticket_id) as overdue, count(assigned.ticket_id) as assigned '.
-     ' FROM '.TICKET_TABLE.' ticket '.
-     'LEFT JOIN '.TICKET_TABLE.' open ON open.ticket_id=ticket.ticket_id AND open.status=\'open\' AND open.isanswered=0 '.
-     'LEFT JOIN '.TICKET_TABLE.' answered ON answered.ticket_id=ticket.ticket_id AND answered.status=\'open\' AND answered.isanswered=1 '.
-     'LEFT JOIN '.TICKET_TABLE.' overdue ON overdue.ticket_id=ticket.ticket_id AND overdue.status=\'open\' AND overdue.isoverdue=1 '.
-     'LEFT JOIN '.TICKET_TABLE.' assigned ON assigned.ticket_id=ticket.ticket_id AND assigned.staff_id='.db_input($thisuser->getId());
-if(!$thisuser->isAdmin()){
-    $sql.=' WHERE ticket.dept_id IN('.implode(',',$thisuser->getDepts()).') OR ticket.staff_id='.db_input($thisuser->getId());
+    ',count(overdue.ticket_id) as overdue, count(assigned.ticket_id) as assigned '.
+    ' FROM '.TICKET_TABLE.' ticket '.
+    'LEFT JOIN '.TICKET_TABLE.' open ON open.ticket_id=ticket.ticket_id AND open.status=\'open\' AND open.isanswered=0 '.
+    'LEFT JOIN '.TICKET_TABLE.' answered ON answered.ticket_id=ticket.ticket_id AND answered.status=\'open\' AND answered.isanswered=1 '.
+    'LEFT JOIN '.TICKET_TABLE.' overdue ON overdue.ticket_id=ticket.ticket_id AND overdue.status=\'open\' AND overdue.isoverdue=1 '.
+    'LEFT JOIN '.TICKET_TABLE.' assigned ON assigned.ticket_id=ticket.ticket_id AND assigned.staff_id='.db_input($thisuser->getId()).
+	' INNER JOIN '.TICKET_DEPARTMENT_TABLE.' ticketDept ON ticket.ticket_id = ticketDept.ticket_id'.
+	' INNER JOIN '.DEPT_TABLE.' dept ON ticketDept.dept_id = dept.dept_id';
+ if(!$thisuser->isAdmin()){
+    $sql.=' WHERE dept.dept_id IN('.implode(',',$thisuser->getDepts()).') OR ticket.staff_id='.db_input($thisuser->getId());
 }
 //echo $sql;
 

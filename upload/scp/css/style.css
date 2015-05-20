@@ -592,20 +592,24 @@ table.front_layer input[type="text"].date {
 }
 
 /* custom chosen */
-.chzn-container {
+.ticket_department .chzn-container,
+.department_email .chzn-container {
 	width: 450px !important;
 }
 
-.chzn-container ul.chzn-choices .search-field {
+.ticket_department .chzn-container ul.chzn-choices .search-field,
+.department_email .chzn-container ul.chzn-choices .search-field {
 	padding: 4px 0;
 }
 
-.chzn-container ul.chzn-choices .search-field  .default{
+.ticket_department .chzn-container ul.chzn-choices .search-field  .default,
+.department_email .chzn-container ul.chzn-choices .search-field  .default {
 	width: auto !important;
 	padding: 2px;
 }
 
-.chzn-container .chzn-drop {
+.ticket_department .chzn-container .chzn-drop,
+.department_email .chzn-container .chzn-drop  {
 	min-width: 200px;
 	max-width: 450px;
 }

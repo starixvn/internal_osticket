@@ -430,8 +430,8 @@ if(($resp=db_query($sql)) && ($notes=db_num_rows($resp))){
                         <div><font class="error">&nbsp;<?=$errors['response']?></font></div>
                         <div>
                            <?
-                             $sql='SELECT premade_id,title FROM '.KB_PREMADE_TABLE.' WHERE isenabled=1 '.
-                                ' AND (dept_id=0 OR dept_id='.db_input($ticket->getDeptId()).')';
+                            /*$sql='SELECT premade_id,title FROM '.KB_PREMADE_TABLE.' WHERE isenabled=1 '.
+                               ' AND (dept_id=0 OR dept_id='.db_input($ticket->getDeptId()).')';
                             $canned=db_query($sql);
                             if($canned && db_num_rows($canned)) {
                              ?>
@@ -443,7 +443,8 @@ if(($resp=db_query($sql)) && ($notes=db_num_rows($resp))){
                                  <option value="<?=$cannedId?>" ><?=Format::htmlchars($title)?></option>
                                 <?}?>
                                </select>&nbsp;&nbsp;&nbsp;<label><input type='checkbox' value='1' name=append checked="true" />Append</label>
-                            <?}?>
+                            <?}*/
+							?>
                             <textarea name="response" id="response" cols="90" rows="9" wrap="soft" style="width:90%; margin-top: 12px"><?=$info['response']?></textarea>
                         </div>
                         <?php if($cfg->canUploadFiles()){ //TODO: may be allow anyways and simply email out attachment?? ?>
@@ -556,12 +557,13 @@ if(($resp=db_query($sql)) && ($notes=db_num_rows($resp))){
                             <select id="dept_id" name="dept_id">
                                 <option value="" selected="selected">-Select Target Dept.-</option>
                                 <?
-                                $depts= db_query('SELECT dept_id,dept_name FROM '.DEPT_TABLE.' WHERE dept_id!='.db_input($ticket->getDeptId()));
+                                /*$depts= db_query('SELECT dept_id,dept_name FROM '.DEPT_TABLE.' WHERE dept_id!='.db_input($ticket->getDeptId()));
                                 while (list($deptId,$deptName) = db_fetch_row($depts)){
                                     $selected = ($info['dept_id']==$deptId)?'selected':''; ?>
                                     <option value="<?=$deptId?>"<?=$selected?>><?=$deptName?> Department </option>
                                 <?
-                                }?>
+                                }*/
+								?>
                             </select><font class='error'>&nbsp;*<?=$errors['dept_id']?></font>
                         </div>
                         <div style="margin-top: 12px;">
