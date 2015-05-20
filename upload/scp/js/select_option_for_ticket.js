@@ -1,26 +1,8 @@
 $(document).ready(function(){    
-     // search league when create new ticket
+    // search league when create new ticket
     searchLeague();
     // search league when edit ticket
     searchLeagueWhenEdit();
-    
-    /* put event date*/
-    var startDateTextBox = $('#fromDate');
-    var endDateTextBox = $('#toDate');    
-    // set default for start date and end date
-    var today = new Date();
-    var dd = today.getDate();
-    var mm = today.getMonth()+1; //January is 0!
-    var yyyy = today.getFullYear();
-    if(dd < 10){
-        dd = '0'+dd;
-    } 
-    if(mm < 10){
-        mm = '0' + mm;
-    } 
-    today = mm + '/' + dd + '/' + yyyy;    
-    startDateTextBox.val(today);
-    endDateTextBox.val(today);
 
     var options = {
         script: "ajax.php?api=tickets&f=searchbyemail&limit=10&",
@@ -36,6 +18,8 @@ $(document).ready(function(){
     };
     
     var autosug = new bsn.AutoSuggest('email', options);
+	
+	$(".departments-select").chosen();
 
     // auto complate word for selectbox 'sport'
     $(".sport-select").chosen();
@@ -76,7 +60,7 @@ $(document).ready(function(){
             
         // clear all leagues when create ticket
         if(league_new != undefined) {
-            league_new.select2("val", "");
+			league_new.select2("val", "");
         }
        
        // search league when edit ticket
@@ -359,14 +343,19 @@ $(document).ready(function(){
     
     //filter for matches
     $('#filter').click(function(){
-        $("#match").removeAttr("disabled");
-        loadMatchList();    
+		if($('#league').val()) {
+			$("#match").removeAttr("disabled");
+			loadMatchList();
+		}
+		else {
+			open_dialog('Please choose a League.');
+		}
     })
     $("#match").live("change", function() { 
         // validate match
         var match_name = $('#match_chzn').find('a').find('span').html();
         if (match_name != 'Select Match') {
-            $('#mess_match').html('');
+            $('#mess_match').html('');			
         }
     });
     // synchronise latest data
@@ -538,6 +527,93 @@ $(document).ready(function(){
     })       
 });
 
+$(window).load(function() {
+	/* put event date*/
+    var startDateTextBox = $('#fromDate');
+    var endDateTextBox = $('#toDate');    
+    // set default for start date and end date
+    var today = new Date();
+    var dd = today.getDate();
+    var mm = today.getMonth()+1; //January is 0!
+    var yyyy = today.getFullYear();
+    if(dd < 10){
+        dd = '0'+dd;
+    } 
+    if(mm < 10){
+        mm = '0' + mm;
+    } 
+    today = mm + '/' + dd + '/' + yyyy;
+	
+	var deptIds = $('#data-department').attr('data-department'),
+		leagueId = $('#data-league').attr('data-league-id'),
+		leagueName = $('#data-league').attr('data-league-name'),
+		matchId = $('#data-match').attr('data-match-id'),
+		matchName = $('#data-match').attr('data-match-name'),
+		fromDate = $('#data-fromDate').attr('data-date'),
+		fromTime = $('#data-fromDate').attr('data-time'),
+		toDate = $('#data-toDate').attr('data-date'),
+		toTime = $('#data-toDate').attr('data-time'),
+		league_new = $("#league_new"),
+		league_edit = $("#league_edit");
+	
+	if(deptIds){
+		var ids = deptIds.split(',').map(function(value) { return parseInt(value); });
+		$('.departments-select').val(ids).trigger("liszt:updated");
+	}
+	
+	if(fromDate) {
+		startDateTextBox.val(fromDate);
+	}
+	else {
+		startDateTextBox.val(today);
+	}
+	
+	if(toDate) {
+		endDateTextBox.val(toDate);
+	}
+	else {
+		endDateTextBox.val(today);
+	}
+	
+	if(fromTime) {
+		$('#fromTime').val(fromTime);
+	}
+	
+	if(toTime) {
+		$('#toTime').val(toTime);
+	}
+	
+	if(leagueId) {		
+		// create ticket
+		if(league_new.length > 0) {
+			$('#league_new').select2('data', {id: leagueId, name: leagueName});
+			
+			$('#match').removeAttr('disabled');		
+			//set match default if any
+			if(matchId) {
+				$(document).ajaxComplete(function() {
+					$('#match').val(parseInt(matchId)).trigger("liszt:updated");
+				});
+			}
+		}
+		
+		// edit ticket
+		if(league_edit.length > 0) {
+			$("#league_edit").select2('data', {id: leagueId, name: leagueName});
+			
+			var match = $("#match");
+			match.removeAttr('disabled');
+			match.html('');
+			match.append('<option value=""></option>');
+			if(matchId) {
+				match.append('<option value="' + parseInt(matchId) + '">' + matchName + '</option>');
+				match.val(parseInt(matchId)).trigger("liszt:updated");
+			}			
+			$(".match-select").trigger("liszt:updated");
+		}
+	}
+});
+
 function open_dialog(strContent) {
     
     if (typeof strContent === "undefined" || strContent === null) { 
@@ -592,6 +668,7 @@ function leagueFormatResult(league) {
     markup += "</td></tr></table>"
     return markup;
 }
+
 function leagueFormatSelection(league) {
     $('#league').val(league.id);
     loadMatchList();

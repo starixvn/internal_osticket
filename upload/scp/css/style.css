@@ -596,10 +596,6 @@ table.front_layer input[type="text"].date {
 	width: 450px !important;
 }
 
-.chzn-container ul.chzn-choices {
-	height: 25px !important;
-}
-
 .chzn-container ul.chzn-choices .search-field {
 	padding: 4px 0;
 }

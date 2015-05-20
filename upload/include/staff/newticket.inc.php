@@ -13,11 +13,6 @@
 <script src="js/uploader.js"></script>
 <script type="text/javascript" src="js/jquery.validate.js" charset="utf-8"></script>
 <script type="text/javascript" src="js/chosen.jquery.js" charset="utf-8"></script>
-<script type="text/javascript">
-	$(function(){
-		$(".chosen-select").chosen();
-	});
-</script>
 
 <?php
 if (!defined('OSTSCPINC') || !is_object($thisuser) || !$thisuser->isStaff())
@@ -34,6 +29,23 @@ $info = ($_POST && $errors) ? Format::input($_POST) : array(); //on error...use 
 <? } ?>
 </div>
 <div class="layer_poup_display"></div>
+
+<?
+	if($_POST && $errors) {
+		$objIBCLeague = new IBC_League($info['league']);
+	?>
+		<input type="hidden" id="data-department" data-department="<?= implode(",", $info['deptIds']) ?>" />
+		<input type="hidden" id="data-league" data-league-id="<?= $objIBCLeague->getId() ?>" 
+			data-league-name="<?= $objIBCLeague->getName() ?>" />
+		<input type="hidden" id="data-match" data-match-id="<?= $info['match'] ?>" />
+		<input type="hidden" id="data-fromDate" data-date="<?= $info['fromDate'] ?>" 
+			data-time="<?= $info['fromTime'] ?>" />
+		<input type="hidden" id="data-toDate" data-date="<?= $info['toDate'] ?>" 
+			data-time="<?= $info['toTime'] ?>" />
+	<?
+	}
+?>
+
 <form action="tickets.php" method="post" enctype="multipart/form-data" id="frm_ticket">    
 <input type='hidden' name='a' value='open'>
 <input type="hidden" value="" id="attachment_name" name="attachment_name"/>  
@@ -50,6 +62,7 @@ $info = ($_POST && $errors) ? Format::input($_POST) : array(); //on error...use 
         <td align="left" nowrap width="20%">Email Address:</td>
         <td>
             <input type="text" id="email" name="email" size="25" maxlength="120" value="<?= $info['email'] ?>">
+			<label class="error_js" id="mess_email"></label>
             &nbsp;<label class="error"><?= $errors['email'] ?></label>
 			<? if ($cfg->notifyONNewStaffTicket()) { ?>
                 &nbsp;&nbsp;&nbsp;
@@ -79,7 +92,7 @@ $info = ($_POST && $errors) ? Format::input($_POST) : array(); //on error...use 
     <tr>
         <td align="left"><b>Department:</b></td>
         <td class="ticket_department">
-            <select name="deptIds[]" class="chosen-select required" id="deptId" multiple="multiple">
+            <select name="deptIds[]" class="chosen-select departments-select required" id="deptId" multiple="multiple">
                 <?
                 $services = db_query('SELECT dept_id,dept_name FROM ' . DEPT_TABLE . ' ORDER BY dept_name');
                 while (list($deptId, $dept) = db_fetch_row($services)) {
@@ -88,6 +101,7 @@ $info = ($_POST && $errors) ? Format::input($_POST) : array(); //on error...use 
 					<? }
 				?>
             </select>
+			<label class="error_js" id="mess_department"></label>
             &nbsp;<label class="error"><b>*</b>&nbsp;<?= $errors['deptId'] ?></label>
         </td>
     </tr>
@@ -148,16 +162,7 @@ $info = ($_POST && $errors) ? Format::input($_POST) : array(); //on error...use 
                 ?>                     
             </select>
             <label class="error_js" id="mess_sport"></label>
-            &nbsp;<label class="error">*&nbsp;<?= $errors['sport_type'] ?></label> 
-            <!-- ui-dialog -->
-            <!--<div id="dialog_sport" title="Add New Sport">
-                <table class="td_txt_left">
-                    <tr>
-                        <td>Name:</td>
-                        <td><input type="text" name="sport_name" size=25 value="" id="sport_name" maxlength="255"></td>
-                    </tr>
-                </table>
-            </div>-->
+            &nbsp;<label class="error">*&nbsp;<?= $errors['sport_type'] ?></label>
         </td>
     </tr>
     <tr>
@@ -166,7 +171,8 @@ $info = ($_POST && $errors) ? Format::input($_POST) : array(); //on error...use 
             <input type="hidden" value="" id="league" name="league"/>
             <input type="hidden" style="width:450px" name="league_new" id="league_new" class="bigdrop select2-offscreen" tabindex="-1">
             &nbsp;<label class="error pull-left">*&nbsp;<?= $errors['league'] ?></label>
-            <span id="loading_league" class="loading"></span>            
+            <span id="loading_league" class="loading"></span>
+			<label class="error_js" id="mess_league"></label>            
         </td>
     </tr>
     <tr>

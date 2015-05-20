@@ -1,6 +1,5 @@
 <!-- attachment -->
 <link href="css/fineuploader.css" rel="stylesheet">
-<link href="css/chosen.css" rel="stylesheet">
 
 <script src="js/header.js"></script>
 <script src="js/util.js"></script>
@@ -12,12 +11,6 @@
 <script src="js/dnd.js"></script>
 <script src="js/uploader.js"></script>
 <script type="text/javascript" src="js/jquery.validate.js" charset="utf-8"></script>
-<script type="text/javascript" src="js/chosen.jquery.js" charset="utf-8"></script>
-<script type="text/javascript">
-	$(function(){
-		$(".chosen-select").chosen();
-	});
-</script>
 <?php
 if(!defined('OSTSCPINC') || !is_object($ticket) || !is_object($thisuser) || !$thisuser->isStaff()) die('Access Denied');
 
@@ -66,6 +59,53 @@ if($_POST && $errors){
         <p class="warnmessage"><?=$warn?></p>
     <?}?>
 </div>
+
+<?
+	if($_POST && $errors) {
+		$objIbcLeague = new IBC_League($info['league']);
+		//
+		$query = "SELECT `match_id`, `match_code`, `event_date`, `kickofftime`" .
+				",CASE home_id
+				WHEN 0
+				THEN('')                
+				ELSE(
+				SELECT team_name FROM " . IBC_TEAM_TABLE . " AS `tea1` WHERE `ma`.`home_id`=`tea1`.`team_id`
+				)
+				END AS `home_team`".
+				",CASE away_id
+					WHEN 0
+					THEN('')                
+					ELSE(
+					SELECT team_name FROM " . IBC_TEAM_TABLE . " AS `tea2` WHERE `ma`.`away_id`=`tea2`.`team_id`
+					)
+					END AS `away_team`".
+				" FROM " . IBC_MATCH_TABLE ." AS `ma`".
+				" WHERE league_id='" . $info['league']. 
+				"' AND sport_type='" . $info['sport_type'].
+				"' AND (match_id='" . $info['match'] . "' OR DATE_FORMAT(kickofftime,'%Y-%m-%d') = DATE_FORMAT(now(),'%Y-%m-%d'))"; 
+	   
+		$result_match = db_query($query);
+		if ($result_match && db_num_rows($result_match)) {
+			while ($row_match = db_fetch_array($result_match)) {
+				$match_name = $row_match['home_team'] . ' - vs - ' 
+					. $row_match['away_team'] . ' [' . $row_match['match_code'] . ']  ( ' 
+					. Format::db_date($row_match['event_date']) . ' )';
+			}
+		}
+	?>
+		<input type="hidden" id="data-department" data-department="<?= implode(",", $info['deptIds']) ?>" />
+		<input type="hidden" id="data-league" data-league-id="<?= $objIbcLeague->getId() ?>" 
+			data-league-name="<?= $objIbcLeague->getName() ?>" />
+		<input type="hidden" id="data-match" data-match-id="<?= $info['match'] ?>" 
+			data-match-name="<?= $match_name ?>"/>
+		<input type="hidden" id="data-fromDate" data-date="<?= $info['fromDate'] ?>" 
+			data-time="<?= $info['fromTime'] ?>" />
+		<input type="hidden" id="data-toDate" data-date="<?= $info['toDate'] ?>" 
+			data-time="<?= $info['toTime'] ?>" />
+	<?
+	}
+?>
+
 <form action="tickets.php?id=<?=$ticket->getId()?>" method="post" id="frm_ticket">
     <input type='hidden' name='id' value='<?=$ticket->getId()?>'>
     <input type='hidden' name='a' value='update'>
@@ -89,11 +129,17 @@ if($_POST && $errors){
                 <input type="text" id="email" name="email" size="25" maxlength="120" value="<?=$info['email']?>">
                 &nbsp;<label class="error"><?=$errors['email']?></label>
             </td>
+        </tr>		
+        <tr>
+            <td align="left">Telephone:</td>
+            <td><input type="text" name="phone" size="25" maxlength="16" value="<?=$info['phone']?>" style="width: 200px">
+                 &nbsp;Ext&nbsp;<input type="text" name="phone_ext" size="6" maxlength="8" value="<?=$info['phone_ext']?>" style="width: 100px">
+                &nbsp;<font class="error">&nbsp;<?=$errors['phone']?></font></td>
         </tr>
 		<tr>
 			<td align="left"><b>Department:</b></td>
 			<td class="ticket_department">
-				<select name="deptIds[]" class="chosen-select required" id="deptId" multiple="multiple">
+				<select name="deptIds[]" class="departments-select required" id="deptId" multiple="multiple">
 					<?					
 					$services = db_query('SELECT dept_id,dept_name FROM ' . DEPT_TABLE . ' ORDER BY dept_name');
 					while (list($deptId, $deptName) = db_fetch_row($services)) {
@@ -103,6 +149,7 @@ if($_POST && $errors){
 						<? }
 					?>
 				</select>
+				<label class="error_js" id="mess_department"></label>
 				&nbsp;<label class="error"><b>*</b>&nbsp;<?= $errors['deptId'] ?></label>
 			</td>
 		</tr>
@@ -144,26 +191,20 @@ if($_POST && $errors){
                     $query="SELECT sport_type,sport_name FROM " . SPORT_TABLE ." WHERE status=1 ORDER BY updated DESC, sport_name ASC";                
                     $result_sport = db_query($query);
                      if($result_sport && db_num_rows($result_sport)) {            
-                        while ($row_sport = db_fetch_array($result_sport)) {     
+                        while ($row_sport = db_fetch_array($result_sport)) {
+							$select = null;
+							if($info['sport_type'] == $row_sport['sport_type']) {
+								$select = 'selected="selected"';                            
+							}
                     ?>
-                    <option value="<?=$row_sport['sport_type']?>" <?php if($info['sport_type'] == $row_sport['sport_type']) echo 'selected="selected"';?>><?=$row_sport['sport_name'];?></option>
+                    <option value="<?=$row_sport['sport_type']?>" <?php echo $select;?>><?=$row_sport['sport_name'];?></option>
                     <?php
                         }
                      }
                     ?>                     
-                </select>    
+                </select>
                 <label class="error_js" id="mess_sport"></label>
                 &nbsp;<label class="error">*&nbsp;&nbsp;<?= $errors['sport_type'] ?></label>
-
-                <!-- ui-dialog -->
-                <!--<div id="dialog_sport" title="Add New Sport">
-                    <table class="td_txt_left">
-                        <tr>
-                            <td>Name:</td>
-                            <td><input type="text" name="sport_name" size=25 value="" id="sport_name" maxlength="255"></td>
-                        </tr>
-                    </table>
-                </div>-->
             </td>
         </tr>
         <tr>
@@ -185,28 +226,6 @@ if($_POST && $errors){
                 &nbsp;<label class="error pull-left">*&nbsp;<?= $errors['league'] ?></label>
                 <span id="loading_league" class="loading"></span>
                 <label class="error_js" id="mess_league"></label>
-
-                <!-- ui-dialog -->
-                <!--<div id="dialog_league" title="Add New League">
-                    <input type="hidden" id="sport_type_select" value="" />
-                    <table class="td_txt_left">
-                        <tr>
-                            <td>Sport:</td>
-                            <td>
-                                <span id="selected_sport_name"></span>
-                                <input type="hidden" value="" id="selected_sport_type"/>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>League Name:</td>
-                            <td><input type="text" name="league_name" size=25 value="" id="league_name" maxlength="255"></td>
-                        </tr>                        
-                        <tr>
-                            <td>IBC League ID:</td>
-                            <td><input type="text" name="ibc_league_id" size=25 value="" id="ibc_league_id" maxlength="255"></td>
-                        </tr>
-                    </table>
-                </div>-->
             </td>
         </tr>
         <tr>
@@ -290,8 +309,11 @@ if($_POST && $errors){
                         if ($result_match && db_num_rows($result_match)) {
                             while ($row_match = db_fetch_array($result_match)) {
                                 $match_name = $row_match['home_team'] . ' - vs - ' . $row_match['away_team'] . ' [' . $row_match['match_code'] . ']  ( ' . Format::db_date($row_match['event_date']) . ' )';
-                                ?>
-                                <option value="<?=$row_match['match_id'] ?>" <?php if ($intIbcMatchId == $row_match['match_id']) echo 'selected="selected"'; ?>><?=$match_name?></option>
+								$select = null;
+								if ($intIbcMatchId == $row_match['match_id']) 
+									$select = 'selected="selected"';
+								?>
+                                <option value="<?=$row_match['match_id'] ?>" <?php echo $select; ?>><?=$match_name?></option>
                                 <?php
                             }
                         }
@@ -446,12 +468,6 @@ if($_POST && $errors){
                     </table>
                 </div>
             </td>
-        </tr>
-        <tr>
-            <td align="left">Telephone:</td>
-            <td><input type="text" name="phone" size="25" maxlength="16" value="<?=$info['phone']?>" style="width: 200px">
-                 &nbsp;Ext&nbsp;<input type="text" name="phone_ext" size="6" maxlength="8" value="<?=$info['phone_ext']?>" style="width: 100px">
-                &nbsp;<font class="error">&nbsp;<?=$errors['phone']?></font></td>
         </tr>
         <tr height=1px><td align="left" colspan=2 >&nbsp;</td></tr>
         <tr>

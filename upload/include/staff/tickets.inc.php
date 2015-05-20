@@ -622,9 +622,10 @@ $basic_display=!isset($_REQUEST['advance_search'])?true:false;
             while ($row = db_fetch_array($tickets_res)) {           
                 $tag=$row['staff_id']?'assigned':'openticket';
                 $flag=null;
-                if($row['lock_id'])
+                /*if($row['lock_id'])
                     $flag='locked';
-                elseif($row['staff_id'])
+                else*/
+				if($row['staff_id'])
                     $flag='assigned';
                 elseif($row['isoverdue'])
                     $flag='overdue';
