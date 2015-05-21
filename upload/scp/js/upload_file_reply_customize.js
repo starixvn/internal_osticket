@@ -47,6 +47,7 @@ $(document).ready(function() {
         if(intTotal != 0) {
             uploader2.uploadStoredFiles();			
         } else {
+            autoLock.removeEvent(window,'beforeunload',autoLock.discardWarning,true);
             $('#replyform').submit();
         }
     });
