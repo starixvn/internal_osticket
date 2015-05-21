@@ -459,8 +459,8 @@ endif;
 //Navigation 
 $submenu=array();
 /*quick stats...*/
-$sql='SELECT count(open.ticket_id) as open, count(answered.ticket_id) as answered '.
-    ',count(overdue.ticket_id) as overdue, count(assigned.ticket_id) as assigned '.
+$sql='SELECT count(DISTINCT open.ticket_id) as open, count(DISTINCT  answered.ticket_id) as answered '.
+    ',count(DISTINCT  overdue.ticket_id) as overdue, count(DISTINCT  assigned.ticket_id) as assigned '.
     ' FROM '.TICKET_TABLE.' ticket '.
     'LEFT JOIN '.TICKET_TABLE.' open ON open.ticket_id=ticket.ticket_id AND open.status=\'open\' AND open.isanswered=0 '.
     'LEFT JOIN '.TICKET_TABLE.' answered ON answered.ticket_id=ticket.ticket_id AND answered.status=\'open\' AND answered.isanswered=1 '.

@@ -99,9 +99,9 @@ if($staffId && ($staffId==$thisuser->getId())) { //Staff's assigned tickets.
 } 
 
 //Show assigned?? Admin can not be limited. Dept managers see all tickets within the dept.
-if(!$cfg->showAssignedTickets() && !$thisuser->isadmin()) {
+/*if(!$cfg->showAssignedTickets() && !$thisuser->isadmin()) {
     $qwhere.=' AND (ticket.staff_id=0 OR ticket.staff_id='.db_input($thisuser->getId()).' OR dept.manager_id='.db_input($thisuser->getId()).') ';
-}
+}*/
 
 //Search?? Somebody...get me some coffee 
 $deep_search=false;
