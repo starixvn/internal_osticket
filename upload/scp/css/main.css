@@ -277,7 +277,7 @@ strong { color:#000; }
 #page-tabs
 {
     margin:0 auto;
-    overflow:hidden;
+    /*overflow:hidden;*/
     position:relative;
     top:2px;
     clear:both;
@@ -310,7 +310,7 @@ strong { color:#000; }
     display:inline;
     height:27px;
     line-height:27px;
-    margin:0
+    margin:0;
 }
 #page-tabs ul#main_nav_new div{
     background:url('http://0.envato-static.com/images/sprites/tabs-2d49abf602.png') 0 -135px no-repeat;
@@ -383,4 +383,117 @@ background:url('http://0.envato-static.com/images/sprites/tabs-2d49abf602.png') 
 
 #page-tabs ul#sub_nav li a:hover {
     color:#FF7C01;
+}
+
+#page-tabs ul#main_nav_new li div.notifications-list {
+    background: url('http://0.envato-static.com/images/sprites/tabs-2d49abf602.png') 0 0 repeat-x;
+    cursor: pointer;
+}
+
+#page-tabs ul#main_nav_new li.selected div.notifications-list {
+    background: url('http://0.envato-static.com/images/sprites/tabs-2d49abf602.png') 0 -270px repeat-x;
+}
+
+#page-tabs ul#main_nav_new li.selected div.notifications-list a {
+    padding: 0;
+    position: relative;
+    display: block;
+    background: none;
+    float: none;
+}
+
+#page-tabs ul#main_nav_new li.selected div.notifications-list i.icon-bell {
+    background: url('../images/icon-bell.png') 0 0 no-repeat !important;
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    margin-top: 8px;
+}
+
+#page-tabs ul#main_nav_new div.notifications-list ul.dropdown-menu {
+    position: relative;
+    display: none;
+    min-width: 200px;
+    max-width: 360px;
+    max-height: 270px;
+    padding: 4px 0;
+    margin: 5px;
+    font-family: inherit;
+    font-size: inherit;
+    list-style-type: none;
+    background: #fff;
+    border: 1px solid #bebebe;
+    border-radius: 3px;
+    -webkit-box-shadow: 0 2px 5px rgba(0, 0, 0, .5);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, .5);
+    top: 0px; 
+    left: 0px; 
+    z-index: 1;
+}
+
+#page-tabs ul#main_nav_new div.notifications-list ul.dropdown-menu.open {
+  display: inline-block;
+}
+
+#page-tabs ul#main_nav_new div.notifications-list ul.dropdown-menu li {
+    float: none;
+    display: block;
+}
+
+#page-tabs ul#main_nav_new div.notifications-list ul.dropdown-menu li.menu-header {
+    position: relative;
+    padding: 3px 10px;
+    color: #2f2f2f;
+    background-color: #fff;
+    font-size: 12px;
+}
+
+#page-tabs ul#main_nav_new div.notifications-list ul.dropdown-menu li.menu-item {
+    position: relative;
+    padding: 3px 10px;
+    color: #2f2f2f;
+    background-color: #fff;
+    line-height: unset;
+    height: 50px;
+}
+
+#page-tabs ul#main_nav_new div.notifications-list ul.dropdown-menu li.menu-item:hover {
+    cursor: pointer;
+    background-color: #ffffdd;
+}
+
+#page-tabs ul#main_nav_new div.notifications-list ul.dropdown-menu li.divider {
+    height: 1px;
+    margin: 1px 0;
+    overflow: hidden;
+    background-color: #e5e5e5;
+}
+
+#page-tabs ul#main_nav_new div.notifications-list ul.dropdown-menu li a {
+    height: 100%;
+}
+
+#page-tabs ul#main_nav_new div.notifications-list ul.dropdown-menu li a div {
+    background: none !important;
+    float: none;
+    width: 90% !important;
+    height: 30%;
+}
+
+#page-tabs ul#main_nav_new div.notifications-list span.count {
+    background: none repeat scroll 0 0 #e84e40;
+    border-radius: 50%;
+    -moz-background-clip: padding-box;
+    -webkit-background-clip: padding-box;
+    background-clip: padding-box;
+    color: #fff;
+    display: inline-block;
+    font-size: 9px;
+    height: 14px;
+    line-height: 14px;
+    position: absolute;
+    right: 0;
+    text-align: center;
+    top: 2px;
+    width: 14px;
 }

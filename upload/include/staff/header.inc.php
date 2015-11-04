@@ -25,6 +25,7 @@ echo '<meta http-equiv="refresh" content="'.AUTO_REFRESH_RATE.'" />';
 <script type="text/javascript" src="js/chosen.jquery.js" charset="utf-8"></script>
 <script type="text/javascript" src="js/jquery-ui-1.9.2.custom.min.js" charset="utf-8"></script>
 <script type="text/javascript" src="js/select2.js" charset="utf-8"></script>
+<script type="text/javascript" src="js/notification_ticket.js" charset="utf-8"></script>
 
 <?php
 if($cfg && $cfg->getLockTime()) { //autoLocking enabled.?>
@@ -55,22 +56,88 @@ if($sysnotice){?>
             if(($tabs=$nav->getTabs()) && is_array($tabs)){
                 $total = count($tabs);
                 $i = 0;
-             foreach($tabs as $tab) { 
+
+             foreach($tabs as $key => $tab) { 
                   if($i < $total-1) {
-            ?>           
-                    <li <?=$tab['active']?'class="selected"':''?>>
-                        <div></div>		
-                        <a href="<?=$tab['href']?>" title="<?=$tab['title']?>"><?=$tab['desc']?></a></li>
-          
-             <?php
-                  } else {
-             ?>
+                    if($key == 'tickets') {
+                        $sql='SELECT DISTINCT tn.`notification_id`, t.`ticket_id`, t.`ticketID`, t.`subject`'.
+                            ', createdby.staff_id AS created_by_id, createdby.username AS created_by_username, tn.is_new'.
+                            ', updatedby.staff_id AS updated_by_id, updatedby.username AS updated_by_username, tn.is_update'.
+                            ', postedby.staff_id AS posted_by_id, postedby.username AS posted_by_username, tn.is_view_response, tn.created FROM '.TICKET_TABLE.' AS t '.
+                            ' INNER JOIN '.TICKET_NOTIFICATION_TABLE.' AS tn ON t.ticket_id = tn.ticket_id '.
+                            ' LEFT JOIN '.TICKET_RESPONSE_TABLE.' AS tr ON tn.response_id = tr.response_id'.
+                            ' LEFT JOIN '.STAFF_TABLE.' AS createdby ON tn.created_by = createdby.staff_id'.
+                            ' LEFT JOIN '.STAFF_TABLE.' AS updatedby ON tn.updated_by = updatedby.staff_id'.
+                            ' LEFT JOIN '.STAFF_TABLE.' AS postedby ON tr.staff_id = postedby.staff_id'.
+                            ' WHERE tn.staff_id = '.$thisuser->getId().' AND (tn.is_new = 1 OR tn.is_update = 1 OR tn.is_view_response = 0)'.
+                            ' ORDER BY tn.created DESC';
+                            
+                        $notifications=db_query($sql);
+                        $totalNotification = db_num_rows($notifications);
+            ?>
+                        <li <?=$tab['active']?'class="tab-ticket selected"':'tab-ticket'?>>
+                            <div></div>     
+                            <a href="<?=$tab['href']?>" title="<?=$tab['title']?>"><?=$tab['desc']?></a>
+            <?php
+                        if($totalNotification > 0) {
+            ?>
+                            <div class="notifications-list">
+                                <a class="btn">
+                                    <i class="icon-bell"></i>
+                                    <span class="count"><?=$totalNotification?></span>
+                                </a>
+                                    <ul class="dropdown-menu">
+                                        <li class="menu-header">You have <span><?=$totalNotification?></span> messages.</li>
+                                        <li class="divider"></li>
+            <?php
+                            while ($row = db_fetch_array($notifications)) {
+                                if($row['created_by_id']) {
+                                    $text = 'Created by';
+                                    $username = $row['created_by_username'];
+                                } else if($row['updated_by_id']) {
+                                    $text = 'Updated by';
+                                    $username = $row['updated_by_username'];
+                                } else if($row['posted_by_id']) {
+                                    $text = 'Posted reply by';
+                                    $username = $row['posted_by_username'];
+                                }
+            ?>
+                                        <li class="menu-item">
+                                            <a id="notificationId" notification-id="<?=$row['notification_id']?>" ticket-id="<?=$row['ticket_id']?>">
+                                                <div style="color: #006699;font-weight: bold;">
+                                                    #<span><?=$row['ticketID']?></span> - <span><?=$row['subject']?></span>
+                                                </div>
+                                                <div><span><?=$text?></span> <span style="font-weight: bold;"><?=$username?></span></div>
+                                                <div style="font-size: 10px; font-style: italic;">Time: <?=Format::db_datetime($row['created'])?></div>
+                                            </a>
+                                        </li>
+                                        <li class="divider"></li>
+            <?php
+                                }
+            ?>
+                                    </ul>
+                            </div> 
+            <?php
+                            }
+            ?>
+                        </li>
+            <?php
+                    } else {
+            ?>
+                        <li <?=$tab['active']?'class="selected"':''?>>
+                            <div></div>     
+                            <a href="<?=$tab['href']?>" title="<?=$tab['title']?>"><?=$tab['desc']?></a>
+                        </li>
+            <?php
+                    }
+                } else {
+            ?>
                      <li <?=$tab['active']?'class="selected last"':'class="last"'?> >
                          <div></div>
                          <a href="<?=$tab['href']?>" title="<?=$tab['title']?>"><?=$tab['desc']?></a>
                          <div class="last"></div>
                      </li> 
-             <?php
+            <?php
                    }
                  $i++;
               }

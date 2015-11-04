@@ -50,6 +50,9 @@ if($_GET['type'] == 'match') { // insert match
     $isIBC = addslashes(trim($_GET['is_ibc']));
     $keyword = addslashes(trim($_GET['keyword']));
     getMoreLeagueListBySportType($sport_type, $isIBC, $keyword);
+} else if($_GET['type'] == 'update_notification') {
+    $notificationId = $_GET['notificationId'];
+    updateNotificationTicket($notificationId);
 }
 
 // get match list from IBC database
@@ -651,4 +654,17 @@ function convertDateTime($strDateTime)
          $strED =  str_replace('/', '-', $strED); 
      }*/
 }
+
+function updateNotificationTicket($notificationId) {
+    $result = 0;
+
+    $sql = 'UPDATE '.TICKET_NOTIFICATION_TABLE.' SET is_new = 0, is_update = 0, is_view_response = 1 WHERE notification_id = ' . db_input($notificationId);
+    if(db_query($sql)) {
+        $result = 1;
+    }
+
+    header('Content-type: application/x-json');
+    echo json_encode($result);
+}
+
 ?>

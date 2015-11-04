@@ -569,6 +569,30 @@ class Ticket {
         
     }
 
+    //get list staffId of recipients on create, update ticket
+    function getListStaffs() {
+        global $cfg, $thisuser;
+        $staffs = array();
+
+        if ($this->id){
+            $sql='SELECT DISTINCT s.staff_id FROM '.TICKET_TABLE.' t '.
+                ' INNER JOIN '.TICKET_DEPARTMENT_TABLE.' td ON t.ticket_id = td.ticket_id '.
+                ' INNER JOIN '.DEPT_TABLE.' d ON td.dept_id = d.dept_id '.
+                ' INNER JOIN '.STAFF_TABLE.' s ON d.dept_id = s.dept_id'.
+                ' WHERE t.ticket_id = '.db_input($this->id);
+                     
+            if(($res=db_query($sql)) && db_num_rows($res)) {
+                while ($row = db_fetch_array($res)) {
+                    if($row['staff_id'] != $thisuser->getId()) {
+                        array_push($staffs, $row['staff_id']);
+                    }
+                }
+            }
+        }
+
+        return $staffs;
+    }
+
 	//get list email of recipients on new ticket
 	function getListEmailOfRecipientsOnNewTicket() {
 		global $cfg;
@@ -1135,7 +1159,7 @@ class Ticket {
     }
 
     //Insert Staff Reply
-    function postResponse($msgid, $response, $signature = 'none', $attachment = false, $canalert = true) {
+    function postResponse($msgid, $response, $signature = 'none', $attachment = false, $canalert = true, $newticket = false) {
         global $thisuser,$cfg;
         if (!$thisuser || !$thisuser->getId() || !$thisuser->isStaff()) //just incase
             return 0;
@@ -1153,6 +1177,24 @@ class Ticket {
             $this->onResponse(); //do house cleaning..
             if (!$canalert) //No alert/response 
                 return $resp_id;
+
+            if (!$newticket) {
+                // insert into notification table
+                $staffIds = $this->getListStaffs();
+                foreach ($staffIds as $staffId) {
+                    $sql = 'INSERT INTO ' . TICKET_NOTIFICATION_TABLE . ' SET ticket_id=' . db_input($this->getId()) .
+                        ',staff_id=' . db_input($staffId) .
+                        ',is_new=' . db_input(0) .
+                        ',created_by=' . db_input(0) .
+                        ',is_update=' . db_input(0) .
+                        ',updated_by=' . db_input(0) .
+                        ',response_id=' . db_input($resp_id) .
+                        ',is_view_response='.db_input(0).
+                        ',created=NOW()';
+
+                    db_query($sql);
+                }
+            }
 			
 			if($cfg->alertONNewMessage()) {
 				$tplId = $cfg->getDefaultTemplateId();
@@ -1629,10 +1671,27 @@ class Ticket {
 
             if (db_query($sql)) {
 				db_query('DELETE FROM ' . TICKET_DEPARTMENT_TABLE .' WHERE ticket_id=' . $this->getId());
-				$deptIds = $var['deptIds'];
+				
+                $deptIds = $var['deptIds'];
 				foreach ($deptIds as $deptId) {
 					db_query('INSERT INTO '.TICKET_DEPARTMENT_TABLE.' SET ticket_id='.db_input($this->getId()).',dept_id='.db_input($deptId));
 				}
+
+                // insert into notification table
+                $staffIds = $this->getListStaffs();
+                foreach ($staffIds as $staffId) {
+                    $sql = 'INSERT INTO ' . TICKET_NOTIFICATION_TABLE . ' SET `ticket_id`=' . db_input($this->getId()) .
+                        ',`staff_id`=' . db_input($staffId) .
+                        ',`is_new`=' . db_input(0) .
+                        ',`created_by`=' . db_input(0) .
+                        ',`is_update`=' . db_input(1) .
+                        ',`updated_by`=' . db_input($thisuser->getId()) .
+                        ',response_id=' . db_input(0) .
+                        ',is_view_response='.db_input(0).
+                        ',created=NOW()';
+
+                    db_query($sql);
+                }
 				
                 // Attachment
                 $objAttachment = new Attachment();
@@ -1732,7 +1791,7 @@ class Ticket {
      */
 
     function create($var, &$errors, $origin, $autorespond = true, $alertstaff = true) {
-        global $cfg, $thisclient, $_FILES;
+        global $cfg, $thisclient, $thisuser, $_FILES;
 
         /* Coders never code so fully and joyfully as when they do it for free  - Peter Rotich */
 
@@ -1935,6 +1994,7 @@ class Ticket {
 				',`ticketID`=' . db_input($extId) .
 				',`dept_id`=' . db_input(1) .
 				',`topic_id`=' . db_input($topicId) .
+                ',`staff_id`=' . db_input($thisuser->getId()) .
 				',`priority_id`=' . db_input($priorityId) .
 				',`email`=' . db_input($var['email']) .
 				',`name`=' . db_input(Format::striptags($var['name'])) .
@@ -2005,6 +2065,22 @@ class Ticket {
 			foreach ($deptIds as $deptId) {
 				db_query('INSERT INTO '.TICKET_DEPARTMENT_TABLE.' SET ticket_id='.db_input($id).',dept_id='.db_input($deptId));
 			}
+
+            // insert into notification table
+            $staffIds = $ticket->getListStaffs();
+            foreach ($staffIds as $staffId) {
+                $sql = 'INSERT INTO ' . TICKET_NOTIFICATION_TABLE . ' SET `ticket_id`=' . db_input($id) .
+                    ',`staff_id`=' . db_input($staffId) .
+                    ',`is_new`=' . db_input(1) .
+                    ',`created_by`=' . db_input($thisuser->getId()) .
+                    ',`is_update`=' . db_input(0) .
+                    ',`updated_by`=' . db_input(0) .
+                    ',response_id=' . db_input(0) .
+                    ',is_view_response='.db_input(0).
+                    ',created=NOW()';
+
+                db_query($sql);
+            }
 			
 			//If enabled...send alert (New Ticket Alert)
 			if ($cfg->alertONNewTicket() && is_object($ticket)) {
@@ -2055,7 +2131,7 @@ class Ticket {
             $msgId = $ticket->getLastMsgId();
             $issue = $ticket->replaceTemplateVars($var['issue']);
 			
-            if (($respId = $ticket->postResponse($msgId, $issue, 'none', null, false))) { //Note that we're overwriting alerts.
+            if (($respId = $ticket->postResponse($msgId, $issue, 'none', null, false, true))) { //Note that we're overwriting alerts.
                 //Mark the ticket unanswered - postResponse marks it answered which is not the desired state.
                 $ticket->markUnAnswered();
                 //Send Notice to user --- if requested AND enabled!!
