@@ -413,8 +413,7 @@ background:url('http://0.envato-static.com/images/sprites/tabs-2d49abf602.png') 
 #page-tabs ul#main_nav_new div.notifications-list ul.dropdown-menu {
     position: relative;
     display: none;
-    min-width: 200px;
-    max-width: 360px;
+    min-width: 220px;
     max-height: 270px;
     padding: 4px 0;
     margin: 5px;
@@ -453,8 +452,8 @@ background:url('http://0.envato-static.com/images/sprites/tabs-2d49abf602.png') 
     padding: 3px 10px;
     color: #2f2f2f;
     background-color: #fff;
-    line-height: unset;
-    height: 50px;
+    line-height: normal !important;
+    height: 60px !important;
 }
 
 #page-tabs ul#main_nav_new div.notifications-list ul.dropdown-menu li.menu-item:hover {
@@ -476,8 +475,9 @@ background:url('http://0.envato-static.com/images/sprites/tabs-2d49abf602.png') 
 #page-tabs ul#main_nav_new div.notifications-list ul.dropdown-menu li a div {
     background: none !important;
     float: none;
-    width: 90% !important;
-    height: 30%;
+    width: 95% !important;
+    line-height: 14px;
+    height: auto !important;
 }
 
 #page-tabs ul#main_nav_new div.notifications-list span.count {
