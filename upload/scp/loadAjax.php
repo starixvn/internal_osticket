@@ -51,8 +51,10 @@ if($_GET['type'] == 'match') { // insert match
     $keyword = addslashes(trim($_GET['keyword']));
     getMoreLeagueListBySportType($sport_type, $isIBC, $keyword);
 } else if($_GET['type'] == 'update_notification') {
-    $notificationId = $_GET['notificationId'];
-    updateNotificationTicket($notificationId);
+    $ticketId = $_GET['ticket_id'];
+    $notificationId = $_GET['notification_id'];
+    $staffId = $_GET['staff_id'];
+    updateNotificationTicket($ticketId, $notificationId, $staffId);
 }
 
 // get match list from IBC database
@@ -655,12 +657,20 @@ function convertDateTime($strDateTime)
      }*/
 }
 
-function updateNotificationTicket($notificationId) {
+function updateNotificationTicket($ticketId, $notificationId, $staffId) {
     $result = 0;
 
-    $sql = 'UPDATE '.TICKET_NOTIFICATION_TABLE.' SET is_new = 0, is_update = 0, is_view_response = 1 WHERE notification_id = ' . db_input($notificationId);
-    if(db_query($sql)) {
-        $result = 1;
+    if($notificationId != 0) {
+        $sql = 'UPDATE '.TICKET_NOTIFICATION_TABLE.' SET is_new = 0, is_update = 0, is_view_response = 1 WHERE notification_id = ' . db_input($notificationId);
+        if(db_query($sql)) {
+            $result = 1;
+        }
+    } else if($ticketId != 0 && $staffId != 0) {
+        $sql = 'UPDATE '.TICKET_NOTIFICATION_TABLE.' SET is_new = 0, is_update = 0, is_view_response = 1 WHERE ticket_id = ' . db_input($ticketId) .
+            ' AND staff_id = '. db_input($staffId);
+        if(db_query($sql)) {
+            $result = 1;
+        }
     }
 
     header('Content-type: application/x-json');

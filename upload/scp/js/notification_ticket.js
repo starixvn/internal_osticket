@@ -16,14 +16,17 @@ $(document).ready(function() {
         }
     });
 
-    $('#notificationId').click(function() {
-        var notificationId = parseInt($(this).attr('notification-id'));
-        var ticketId = parseInt($(this).attr('ticket-id'));
+    $('.notificationId').click(function() {
+        var notificationId = parseInt($(this).attr('notification-id')),
+            ticketId = parseInt($(this).attr('ticket-id')),
+            staffId = parseInt($(this).attr('staff-id'));
         $.ajax({
             type: "GET",
             url: 'loadAjax.php',
             data: {
-                notificationId: notificationId,
+                ticket_id: ticketId,
+                notification_id: notificationId,
+                staff_id: staffId,
                 type: 'update_notification'
             },
             dataType: "json",

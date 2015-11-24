@@ -644,12 +644,17 @@ $basic_display=!isset($_REQUEST['advance_search'])?true:false;
                 </td>
                 <?}?>
                 <td align="center" title="<?=$row['email']?>" nowrap>
-                  <a class="Icon <?=strtolower($row['source'])?>Ticket" title="<?=$row['source']?> Ticket: <?=$row['email']?>" 
-                    href="tickets.php?id=<?=$row['ticket_id']?>"><?=$tid?></a></td>
+                  <a ticket-id="<?=$row['ticket_id']?>" staff-id="<?=$thisuser->getId()?>" 
+                    class="notificationId Icon <?=strtolower($row['source'])?>Ticket" title="<?=$row['source']?> Ticket: <?=$row['email']?>" 
+                    href="tickets.php?id=<?=$row['ticket_id']?>"><?=$tid?></a>
+                </td>
                 <td align="center" nowrap><?=Format::db_date($row['created'])?></td>
-                <td><a <?if($flag) { ?> class="Icon <?=$flag?>Ticket" title="<?=ucfirst($flag)?> Ticket" <?}?> 
-                    href="tickets.php?id=<?=$row['ticket_id']?>"><?=$subject?></a>
-                    &nbsp;<?=$row['attachments']?"<span class='Icon file'>&nbsp;</span>":''?></td>                
+                <td>
+                    <a ticket-id="<?=$row['ticket_id']?>" staff-id="<?=$thisuser->getId()?>"
+                        <?if($flag) { ?> class="notificationId Icon <?=$flag?>Ticket" title="<?=ucfirst($flag)?> Ticket" <?}?>
+                        href="tickets.php?id=<?=$row['ticket_id']?>"><?=$subject?></a>
+                    &nbsp;<?=$row['attachments']?"<span class='Icon file'>&nbsp;</span>":''?>
+                </td>                
                 
                 <td nowrap>
 					<ul class="list-department">
@@ -797,7 +802,6 @@ $basic_display=!isset($_REQUEST['advance_search'])?true:false;
                 }  
             });
         })
-        
     })
 </script>
 <?

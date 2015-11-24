@@ -574,18 +574,31 @@ class Ticket {
         global $cfg, $thisuser;
         $staffs = array();
 
-        if ($this->id){
-            $sql='SELECT DISTINCT s.staff_id FROM '.TICKET_TABLE.' t '.
-                ' INNER JOIN '.TICKET_DEPARTMENT_TABLE.' td ON t.ticket_id = td.ticket_id '.
-                ' INNER JOIN '.DEPT_TABLE.' d ON td.dept_id = d.dept_id '.
-                ' INNER JOIN '.STAFF_TABLE.' s ON d.dept_id = s.dept_id'.
-                ' WHERE t.ticket_id = '.db_input($this->id);
+        $depts = $thisuser->getDepts();
+
+        if($thisuser->isadmin() && $this->id){
+            $sql='SELECT DISTINCT staff_id FROM '.STAFF_TABLE.
+                ' WHERE isactive = 1 AND staff_id <> '.$thisuser->getId();
                      
             if(($res=db_query($sql)) && db_num_rows($res)) {
                 while ($row = db_fetch_array($res)) {
-                    if($row['staff_id'] != $thisuser->getId()) {
-                        array_push($staffs, $row['staff_id']);
-                    }
+                    array_push($staffs, $row['staff_id']);
+                }
+            }            
+        } else if($depts && is_array($depts) && count($depts) && $this->id){
+            $sql='SELECT DISTINCT s.staff_id FROM '.DEPT_TABLE.' d'.
+                ' INNER JOIN '.STAFF_TABLE.' s ON d.dept_id = s.dept_id'.
+                ' WHERE s.isactive = 1 AND s.staff_id <> '.$thisuser->getId().' AND d.dept_id IN ('.implode(',',$depts).')'.
+                ' UNION '.
+                ' SELECT DISTINCT s.staff_id FROM '.TICKET_TABLE.' t '.
+                ' INNER JOIN '.TICKET_DEPARTMENT_TABLE.' td ON t.ticket_id = td.ticket_id '.
+                ' INNER JOIN '.DEPT_TABLE.' d ON td.dept_id = d.dept_id '.
+                ' INNER JOIN '.STAFF_TABLE.' s ON d.dept_id = s.dept_id'.
+                ' WHERE s.isactive = 1 AND s.staff_id <> '.$thisuser->getId().' AND t.ticket_id = '.db_input($this->id);
+                     
+            if(($res=db_query($sql)) && db_num_rows($res)) {
+                while ($row = db_fetch_array($res)) {
+                    array_push($staffs, $row['staff_id']);
                 }
             }
         }
@@ -1384,6 +1397,8 @@ class Ticket {
 			db_query('DELETE FROM ' . TICKET_MESSAGE_TABLE . ' WHERE ticket_id=' . db_input($this->getId()));
             db_query('DELETE FROM ' . TICKET_RESPONSE_TABLE . ' WHERE ticket_id=' . db_input($this->getId()));
             db_query('DELETE FROM ' . TICKET_NOTE_TABLE . ' WHERE ticket_id=' . db_input($this->getId()));
+            db_query('DELETE FROM ' . TICKET_NOTIFICATION_TABLE . ' WHERE ticket_id=' . db_input($this->getId()));
+
             $this->deleteAttachmentByTicketId();
             $this->deleteAttachments();
 			

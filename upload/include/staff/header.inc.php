@@ -103,7 +103,7 @@ if($sysnotice){?>
                                 }
             ?>
                                         <li class="menu-item">
-                                            <a id="notificationId" notification-id="<?=$row['notification_id']?>" ticket-id="<?=$row['ticket_id']?>">
+                                            <a class="notificationId" notification-id="<?=$row['notification_id']?>" ticket-id="<?=$row['ticket_id']?>">
                                                 <div style="color: #006699;font-weight: bold;">
                                                     #<span><?=$row['ticketID']?></span> - <span><?=$row['subject']?></span>
                                                 </div>
