@@ -15,7 +15,7 @@ namespace IBCServer
             routes.IgnoreRoute("{resource}.axd/{*pathInfo}");
 
             routes.MapHttpRoute(
-                name: "DefaultApi",
+                name: "DefaultApi2",
                 routeTemplate: "api/{controller}/{id}",
                 defaults: new { id = RouteParameter.Optional });
 

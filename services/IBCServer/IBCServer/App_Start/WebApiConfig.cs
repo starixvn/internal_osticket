@@ -10,7 +10,7 @@ namespace IBCServer
         public static void Register(HttpConfiguration config)
         {
             config.Routes.MapHttpRoute(
-                name: "DefaultApi",
+                name: "DefaultApi1",
                 routeTemplate: "api/{controller}/{id}/{total}",
                 defaults: new { id = RouteParameter.Optional, total = RouteParameter.Optional }
             );

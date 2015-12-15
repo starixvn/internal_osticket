@@ -157,7 +157,7 @@
     
     // define API for web service
     //define(URL_WEBSERVICE, 'http://10.19.10.71:8081/api/');
-    define(URL_WEBSERVICE, 'http://58.86.55.10/osticket-sync-event/api/');
+    define(URL_WEBSERVICE, 'http://58.86.55.10/osticketapi/api/');
     // number of item in page
     define('PAGE_LIMIT','30');    
    
